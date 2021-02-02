@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/player/kuristaja/zombies/zpz/zombie2_hairflat"
+	"$translucent" 1
+	"$nocull" "1"
+}

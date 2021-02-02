@@ -1,0 +1,13 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/player/kuristaja/zombies/zpz/zombie2_pants"
+	"$bumpmap" "models/player/kuristaja/zombies/zpz/zombie2_pants_normal"
+
+	"$nocull" "1"
+
+	"$phong" "1"
+	"$phongexponent" "40"
+	"$phongboost" ".07"
+	"$phongfresnelranges" "[5 6 8]"
+	"$PhongAlbedoTint" "1"
+}
