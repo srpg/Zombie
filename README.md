@@ -12,17 +12,16 @@ Commands:
  - !zprop to open zprop menu
 
 Currently Avaible Features:
- - hegrenade ignites zombie
- - Gain full hp, when kill
- - Zombie respawn back to human, when kill
- - Get config based primary and config based secondary after first infect
- - Armor and get helmet after first infect
- - Empty weapon get automatically removed
+ - Hegrenade damage ignites zombie(Config able)
+ - Full health after kill zombie(Config able)
+ - After death zombie respawn back as human
+ - When first zombie is infected, you will get primary and secondary(Config able for is feature on and which weapons)
+ - When first zombie is infected, you will get Armor + Helmet
+ - When no ammo/bullets left weapon automatically get removed(Config able)
  - Automatically all floor weapons get removed
  - Infect sounds, when infect to zombie
  - Translate able
  - 15 seconds timer for first infect
- - Config able
  - Zprop(messages and price for using them)
  
 Currently Avaible Features Clan Tag:
