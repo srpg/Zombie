@@ -1,25 +1,33 @@
 import os, random, path
-from events import Event
+# Core
+from core import GAME_NAME, echo_console
+# Sglite
 from sqlite3 import dbapi2 as sqlite
-from core import echo_console
+# Delay
 from listeners.tick import Delay
+# Player/Userid
 from players.entity import Player
 from players.helpers import index_from_userid, userid_from_index
 from filters.players import PlayerIter
+# Entity
 from entities.entity import Entity, BaseEntity
+# Model
 from engines.precache import Model
+# Download
 from stringtables.downloads import Downloadables
-from weapons.manager import weapon_manager
+# Server Command
 from engines.server import queue_command_string
+# Events
 from events.hooks import PreEvent, EventAction
+from events import Event
+# Messages
 from messages import SayText2, HintText
+# Weapon
 from filters.weapons import WeaponClassIter
+from weapons.manager import weapon_manager
+# Zombies
 from zombie.command import command
 from zombie.zprop import zprop
-from translations.strings import LangStrings
-
-from colors import Color
-from core import GAME_NAME
 
 if GAME_NAME == 'csgo':
 	default = '\x01'
@@ -27,10 +35,10 @@ if GAME_NAME == 'csgo':
 else:
 	default = '\x07FFB300'
 	cyan = '\x0700CED1'
+	
 #======================
 # Translated Messages
 #======================
-
 chat = LangStrings('zombie_chat')
 Kill = SayText2(chat['Zprop_credits'])
 Game = SayText2(chat['Game'])
@@ -43,7 +51,7 @@ restore = SayText2(chat['Weapon_restore'])
 buy = SayText2(chat['Zprop_buy'])
 
 #======================
-# Config
+# Config Add proper config?
 #======================
 Infitebullets = 1 # Activates infinite bullets, if player have clan_tag in config have,
 Weapon_restore = 1 # Will clan member gain weapons back after getting removed
@@ -438,10 +446,8 @@ def player_spawn(event):
 	player.set_noblock(True)
 	player.cash = 12000
 	player.unrestrict_weapons(*weapons)
-    
 	Game.send(player.index, green='\x04', default=default)
 	Market.send(player.index, green='\x04', default=default)
-    
 	global location
 	location = player.origin
 	
@@ -455,6 +461,19 @@ def player_hurt(args):
 				if not Player(index_from_userid(userid)).team == Player(index_from_userid(attacker)).team:
 					if not Player(index_from_userid(userid)).team == 2:
 						infect(userid)
+						
+@Event('player_hurt')
+def player_hurt(args):
+	userid = args.get_int('userid')
+	attacker = args.get_int('attacker')
+	if attacker > 0:
+		if not Player(index_from_userid(userid)).team == Player(index_from_userid(attacker)).team:
+			if args.get_string('weapon') == 'hegrenade' and FIRE:
+				burn(userid, 10)
+			else:
+				if not Player(index_from_userid(attacker)).is_bot() and HINT:
+					Delay(0.1, infopanel, (attacker, userid)) # Not sure will this work properly
+
 @Event('player_death')
 def player_death(args):
 	userid = args.get_int('userid')
@@ -466,15 +485,15 @@ def player_death(args):
 			kill_credits(attacker)
 			if KILL_HP:
 				attacker_player.health = 100
-			if attacker_player.clan_tag in Clan:
-				attacker_player.health += Boost # Not sure will KILL_HP activate overwrite stacking hp
+			if attacker_player.clan_tag in Clan and KILL_HP:
+				attacker_player.max_health += Boost
+				attacker_player.health = attacker_player.max_health
 				attacker_player.speed = Speed
             
 @Event('player_death')
 def player_death(args):
 	userid = args.get_int('userid')
 	Delay(0.1, respawn, (userid,))
-	
 	
 @Event('weapon_fire_on_empty')
 def weapon_fire_on_empty(args):
@@ -493,19 +512,6 @@ def weapon_fire_on_empty(args):
  			player.give_named_item('weapon_%s' % (weapon))
  			Clan_Tag = player.clan_tag
  			restore.send(player.index, weapons=weapon, clan=Clan_Tag, default=default, cyan=cyan, green='\x04')
-
-@Event('player_hurt')
-def player_hurt(args):
-	userid = args.get_int('userid')
-	attacker = args.get_int('attacker')
-	if attacker > 0:
-		if not Player(index_from_userid(userid)).team == Player(index_from_userid(attacker)).team:
-			if args.get_string('weapon') == 'hegrenade' and FIRE:
-				burn(userid, 10)
-			else:
-				if not Player(index_from_userid(attacker)).is_bot():
-					if HINT:
-						Delay(0.1, infopanel, (attacker, userid)) # Not sure will this work properly
 
 @Event('weapon_fire')
 def weapon_fire(args):
