@@ -22,6 +22,7 @@ from events.hooks import PreEvent, EventAction
 from events import Event
 # Messages
 from messages import SayText2, HintText
+from translations.strings import LangStrings
 # Weapon
 from filters.weapons import WeaponClassIter
 from weapons.manager import weapon_manager
