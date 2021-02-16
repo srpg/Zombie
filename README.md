@@ -23,8 +23,12 @@ Currently Avaible Features:
  - Translate able
  - 15 seconds timer for first infect
  - Config able
- - Clan Tag Features: Gain extra hp when kill, Get removed weapon back, Gain speed once(when kill)
  - Zprop(messages and price for using them)
- - infinite bullets(if have clan tag for it and config enabled)
+ 
+Currently Avaible Features Clan Tag:
+ - Increases player max healh when kill zombie
+ - Gives back removed weapons(Config able)
+ - Once speed boost when kill
+ - Infinite Bullets(Config able)
 
 Load command: sp plugin load zombie
