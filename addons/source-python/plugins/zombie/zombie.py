@@ -486,7 +486,7 @@ def player_death(args):
 			kill_credits(attacker)
 			if KILL_HP:
 				attacker_player.health = 100
-			if attacker_player.clan_tag in Clan and KILL_HP:
+			if attacker_player.clan_tag in Clan:
 				attacker_player.max_health += Boost
 				attacker_player.health = attacker_player.max_health
 				attacker_player.speed = Speed
@@ -503,8 +503,8 @@ def weapon_fire_on_empty(args):
 	player = Player(index_from_userid(userid))
 	if player.primary:
 		player.primary.remove()
-	if Player(index_from_userid(userid)).primary:
-		Player(index_from_userid(userid)).primary.remove()
+	if player.primary:
+		player.primary.remove()
 	elif player.secondary:
 		player.secondary.remove()
 	if not player.is_bot():
