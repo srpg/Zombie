@@ -54,7 +54,8 @@ buy = SayText2(chat['Zprop_buy'])
 #======================
 # Config Add proper config?
 #======================
-Infitebullets = 1 # Activates infinite bullets, if player have clan_tag in config have,
+Infitebullets = 1 # Activates infinite bullets, if player have clan_tag in config have
+WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
 Weapon_restore = 1 # Will clan member gain weapons back after getting removed
 Boost = 10 # How much extra hp gain when have clan tag for killing
 Speed = 1.10 # Current: 10% increase speed. How many percent increase speed for killing(only once increases)
@@ -498,21 +499,22 @@ def player_death(args):
 	
 @Event('weapon_fire_on_empty')
 def weapon_fire_on_empty(args):
-	userid = args.get_int('userid')
-	weapon = args.get_string('weapon')
-	player = Player(index_from_userid(userid))
-	if player.primary:
-		player.primary.remove()
-	if player.primary:
-		player.primary.remove()
-	elif player.secondary:
-		player.secondary.remove()
-	if not player.is_bot():
-		weapon_remove.send(player.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
-		if player.clan_tag in Clan and Weapon_restore:
- 			player.give_named_item('weapon_%s' % (weapon))
- 			Clan_Tag = player.clan_tag
- 			restore.send(player.index, weapons=weapon, clan=Clan_Tag, default=default, cyan=cyan, green='\x04')
+	if WEAPON_REMOVE:
+		userid = args.get_int('userid')
+		weapon = args.get_string('weapon')
+		player = Player(index_from_userid(userid))
+		if player.primary:
+			player.primary.remove()
+		if player.primary:
+			player.primary.remove()
+		elif player.secondary:
+			player.secondary.remove()
+		if not player.is_bot():
+			weapon_remove.send(player.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
+			if player.clan_tag in Clan and Weapon_restore:
+ 				player.give_named_item('weapon_%s' % (weapon))
+ 				Clan_Tag = player.clan_tag
+ 				restore.send(player.index, weapons=weapon, clan=Clan_Tag, default=default, cyan=cyan, green='\x04')
 
 @Event('weapon_fire')
 def weapon_fire(args):
