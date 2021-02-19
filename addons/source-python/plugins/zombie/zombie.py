@@ -308,15 +308,14 @@ class PlayerObject(object):
 #======================
 # Other
 #======================
-
 weapons = [weapon.basename for weapon in WeaponClassIter(not_filters='knife')]
 
-if GAME_NAME == 'cstrike':
-	close = 0
-	zombie_models = ['models/player/zh/zh_charple001.mdl','models/player/zh/zh_corpse002.mdl','models/player/zh/zh_zombie003.mdl','models/player/ics/hellknight_red/t_guerilla.mdl']
-else:
+if GAME_NAME == 'csgo':
 	zombie_models = ['models/player/kuristaja/zombies/bman/bman.mdl', 'models/player/kuristaja/zombies/zpz/zpz.mdl', 'models/player/kuristaja/zombies/charple/charple.mdl']
 	close = 9
+else:
+	close = 0
+	zombie_models = ['models/player/zh/zh_charple001.mdl','models/player/zh/zh_corpse002.mdl','models/player/zh/zh_zombie003.mdl','models/player/ics/hellknight_red/t_guerilla.mdl']
 	
 def hudhint(userid, text):
 	HintText(message=text).send(index_from_userid(userid))
@@ -334,10 +333,10 @@ DATABASE_STORAGE_METHOD = SQLiteManager
 database = None
 databasePath = os.path.join(__FILEPATH__ + '/players.sqlite')
 players = PlayerManager()
-if GAME_NAME == 'cstrike':
-	DOWNLOADLIST_PATH  = os.path.join(__FILEPATH__ + '/css.txt')
-else:
+if GAME_NAME == 'csgo':
 	DOWNLOADLIST_PATH  = os.path.join(__FILEPATH__ + '/csgo.txt')
+else:
+	DOWNLOADLIST_PATH  = os.path.join(__FILEPATH__ + '/css.txt')
 
 def load():
 	global database
@@ -544,13 +543,14 @@ def infect_first(userid):
 					player.secondary.remove()
 				player.give_named_item('weapon_%s' % (weapon_secondary))
 			player.armor = 100
-			player.set_property_bool('m_bHasHelmet', 1)
+			if GAME_NAME == 'cstrike' or GAME_NAME == 'csgo':
+				player.set_property_bool('m_bHasHelmet', 1)
 			queue_command_string('mp_humanteam ct')
 		else:
-			if GAME_NAME == 'cstrike':
-				player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-			else:
+			if GAME_NAME == 'csgo':
 				player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
+			else:
+				player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
 			player.switch_team(2)
 			player.set_noblock(True)
 			player.health = 10000
@@ -576,10 +576,10 @@ def infect(userid):
 	player.health = 10000
 	player.speed = 1.5 # Should make 50% faster walk
 	player.gravity = 0.75 # Should make 25% less have gravity
-	if GAME_NAME == 'cstrike':
-		player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-	else:
+	if GAME_NAME == 'csgo':
 		player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
+	else:
+		player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
 	if player.secondary:
 		player.secondary.remove()
 	elif player.primary:
