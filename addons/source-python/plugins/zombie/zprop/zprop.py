@@ -1,12 +1,20 @@
+# Engine
 from engines.server import engine_server
+# Player/userid
 from players.helpers import index_from_userid, userid_from_index
 from players.entity import Player
+# Entity
 from entities.entity import Entity
-from zombie import zombie
+# Menus
 from menus import SimpleMenu, Text, SimpleOption
+# Chat command
 from commands.say import SayFilter
+# Message
 from messages import SayText2
+# Core
 from core import GAME_NAME
+# Zombie own
+from zombie import zombie
 
 def tell(userid, text):
 	SayText2(message='' + text).send(index_from_userid(userid))
@@ -29,7 +37,7 @@ def sayfilter(command, index, teamonly):
 			text = command[0].replace('!', '', 1).replace('/', '', 1).lower()
 			args = command.arg_string
 			if text == 'zprop':
-				if GAME_NAME == 'cstrike':
+				if not GAME_NAME == 'csgo':
 					if not Player(index_from_userid(userid)).team == 1:
 						if not Player(index_from_userid(userid)).dead:
 							zprop_menu(userid)
