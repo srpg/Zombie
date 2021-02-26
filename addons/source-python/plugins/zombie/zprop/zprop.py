@@ -76,32 +76,32 @@ def menu_callback(_menu, _index, _option):
 		if choice == '1':
 			cabinet(userid)
 			current = zombie.players[userid]['credits']
-			zombie.players[userid]['credits'] -= 2
+			current -= 2
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='2', cur=current, type='Filing Cabinet')
 		elif choice == '2':
 			barrel(userid)
 			current = zombie.players[userid]['credits']
-			zombie.players[userid]['credits'] -= 3
+			current -= 3
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='3', cur=current, type='Barrek')
 		elif choice == '3':
 			dryer(userid)
 			current = zombie.players[userid]['credits']
-			zombie.players[userid]['credits'] -= 4
+			current -= 4
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='4', cur=current, type='Dryer')
 		elif choice == '4':
 			crate(userid)
 			current = zombie.players[userid]['credits']
-			zombie.players[userid]['credits'] -= 5
+			current -= 5
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='5', cur=current, type='Wooden Crate')
 		elif choice == '5':
 			pump(userid)
 			current = zombie.players[userid]['credits']
-			zombie.players[userid]['credits'] -= 7
+			current -= 7
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='7', cur=current, type='Gas Pump')
 		elif choice == '6':
 			dumpster(userid)
 			current = zombie.players[userid]['credits']
-			zombie.players[userid]['credits'] -= 15
+			current -= 15
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='15', cur=current, type='Dumpster')
 			
 def cabinet(userid):
