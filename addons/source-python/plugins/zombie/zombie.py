@@ -504,8 +504,6 @@ def weapon_fire_on_empty(args):
 		player = Player(index_from_userid(userid))
 		if player.primary:
 			player.primary.remove()
-		if player.primary:
-			player.primary.remove()
 		elif player.secondary:
 			player.secondary.remove()
 		if not player.is_bot():
