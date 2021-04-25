@@ -25,7 +25,7 @@ Currently Avaible Features:
  - Zprop(messages and price for using them)
  
 Currently Avaible Features Clan Tag:
- - Increases player max healh when kill zombie
+ - Increases player max health when kill zombie
  - Gives back removed weapons(Config able)
  - Once speed boost when kill
  - Infinite Bullets(Config able)
