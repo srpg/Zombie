@@ -1,5 +1,5 @@
 from commands.say import SayFilter
-
+from core import GAME_NAME
 from filters.weapons import WeaponIter, WeaponClassIter
 from weapons.manager import weapon_manager
 
@@ -14,7 +14,10 @@ from messages import SayText2
 
 from zombie import zombie
 
-weapon_list = weapon_manager.ini['weapons']
+if GAME_NAME == 'csgo':
+	close = 9
+else:
+	close = 0
 
 chat = LangStrings('market_chat')
 
@@ -57,7 +60,7 @@ def sayfilter(command, index, teamonly):
 			if text == 'market':
 				if not Player(index_from_userid(userid)).get_property_bool('pl.deadflag'):
 					if not Player(index_from_userid(userid)).team == 2:
-						market(userid)
+						market_main(userid)
 					else:
 						market_ct.send(index_from_userid(userid), green='\x04')
 				else:
@@ -70,11 +73,34 @@ def sayfilter(command, index, teamonly):
 					ztele.send(index_from_userid(userid), green='\x04')
 				return False
 
-def market(userid):
-	menu = PagedMenu(title = 'Market\n')
+def market_main(userid):
+	menu = SimpleMenu()
 	if is_queued(menu, index_from_userid(userid)):
 		return
-	for weapon in WeaponClassIter(is_filters='pistol') and weapon in WeaponClassIter(is_filters='primary'):
+	menu.append(Text('Market\nSection: Main Menu\n'))
+	menu.append(Text('-' * 25))
+	menu.append(SimpleOption(1, 'Primaries', 'Rifle'))
+	menu.append(SimpleOption(2, 'Secondaries', 'Secondary'))
+	menu.append(Text('-' * 25))
+	menu.append(SimpleOption(close, 'Close', None))
+	menu.select_callback = main_menu_callback
+	menu.send(indexFromUserid(userid))
+
+def market_rifle(userid):
+	menu = PagedMenu(title = 'Market\nSection: Primaries\n')
+	if is_queued(menu, index_from_userid(userid)):
+		return
+	for weapon in WeaponClassIter(is_filters='primary'):
+		afford = Player(index_from_userid(userid)).cash >= weapon.cost
+		menu.append(PagedOption('%s [%s$]' % (weapon.basename.upper(), weapon.cost), weapon, afford, afford))
+	menu.select_callback = menu_callback
+	menu.send(indexFromUserid(userid))
+    
+def market(userid):
+	menu = PagedMenu(title = 'Market\nSection: Pistols\n')
+	if is_queued(menu, index_from_userid(userid)):
+		return
+	for weapon in WeaponClassIter(is_filters='pistol'):
 		afford = Player(index_from_userid(userid)).cash >= weapon.cost
 		menu.append(PagedOption('%s [%s$]' % (weapon.basename.upper(), weapon.cost), weapon, afford, afford))
 	menu.select_callback = menu_callback
@@ -83,17 +109,28 @@ def market(userid):
 #==================================
 # Menu Call Backs
 #==================================
+def main_menu_callback(_menu, _index, _option):
+	choice = _option.value
+	if choice:
+		userid = userid_from_index(_index)
+		if choice == 'Rifle':
+			market_rifle(userid)
+			zombie.players[userid]['choice'] = 'rifle'
+		elif choice == 'Secondary':
+			market(userid)
+			zombie.players[userid]['choice'] = 'secondary'
+            
 def menu_callback(_menu, _index, _option):
 	choice = _option.value
 	if choice:
 		userid = userid_from_index(_index)
 		player = Player(index_from_userid(userid))
-		player.cash -= choice.price
-		if choice.tags in ['primary']:
-			if player.primary:
-				player.primary.remove()
-		elif choice.tags in['pistol']:
+		player.cash -= choice.cost
+		if zombie.players[userid]['choice'] == 'secondary':
 			if player.secondary:
 				player.secondary.remove()
-		player.give_named_item('%s' % (choice))
+		elif zombie.players[userid]['choice'] == 'rifle':
+			if player.primary:
+				player.primary.remove()
+		player.give_named_item('%s' % (choice.name))
 		weapon_tell.send(index_from_userid(userid), weapon=choice.basename.upper(), price=choice.cost, green='\x04', cyan=zombie.cyan, default=zombie.default)
