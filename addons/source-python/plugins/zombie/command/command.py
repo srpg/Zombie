@@ -71,14 +71,12 @@ def sayfilter(command, index, teamonly):
 				return False
 
 def market(userid):
-	menu = PagedMenu(
-	title = 'Market\n')
-	if is_queued(menu, indexFromUserid(userid)):
+	menu = PagedMenu(title = 'Market\n')
+	if is_queued(menu, index_from_userid(userid)):
 		return
-	for weapon in weapon_list:
-		if 'cost' in weapon_list[weapon]:
-			afford = Player(index_from_userid(userid)).cash >= weapon_list[weapon]['cost']
-			menu.append(PagedOption('%s [%s$]' % (weapon, weapon_list[weapon]['cost']), weapon, afford, afford))
+	for weapon in WeaponClassIter(is_filters='pistol') and weapon in WeaponClassIter(is_filters='primary'):
+		afford = Player(index_from_userid(userid)).cash >= weapon.cost
+		menu.append(PagedOption('%s [%s$]' % (weapon.basename.upper(), weapon.cost), weapon, afford, afford))
 	menu.select_callback = menu_callback
 	menu.send(indexFromUserid(userid))
 
@@ -88,9 +86,14 @@ def market(userid):
 def menu_callback(_menu, _index, _option):
 	choice = _option.value
 	if choice:
-		userid = useridFromIndex(_index)
+		userid = userid_from_index(_index)
 		player = Player(index_from_userid(userid))
-		player.cash -= weapon_list[choice]['cost']
-		player.client_command('drop', True)
-		player.give_named_item('weapon_%s' % (choice))
-		weapon_tell.send(index_from_userid(userid), weapon=choice, price=weapon_list[choice]['cost'], green='\x04', cyan=zombie.cyan, default=zombie.default)
+		player.cash -= choice.price
+		if choice.tags in ['primary']:
+			if player.primary:
+				player.primary.remove()
+		elif choice.tags in['pistol']:
+			if player.secondary:
+				player.secondary.remove()
+		player.give_named_item('%s' % (choice))
+		weapon_tell.send(index_from_userid(userid), weapon=choice.basename.upper(), price=choice.cost, green='\x04', cyan=zombie.cyan, default=zombie.default)
