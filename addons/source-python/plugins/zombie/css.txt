@@ -35,10 +35,3 @@ materials/models/player/ics/hellknight_red/hellknight_normal.vtf
 materials/models/player/zh/Charple1_sheet.vmt
 materials/models/player/zh/corpse1.vmt
 materials/models/player/zh/Zombie_Classic_sheet.vmt
-
-materials/overlays/zr/humans_win.vmt
-materials/overlays/zr/humans_win.vtf
-materials/overlays/zr/zombies_win.vmt
-materials/overlays/zr/zombies_win.vtf
-materials/overlays/zr/zvision.vmt
-materials/overlays/zr/zvision.vtf
