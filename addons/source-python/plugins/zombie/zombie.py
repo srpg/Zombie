@@ -518,14 +518,23 @@ def weapon_fire(args):
 	userid = args.get_int('userid')
 	player = Player(index_from_userid(userid))
 	if player.clan_tag in Clan and Infitebullets:
-		weapon = player.active_weapon
 		primary = player.primary
 		secondary = player.secondary
-		max_clip = weapon_manager[weapon.classname].clip
-		if weapon == primary:
-			weapon.clip = max_clip
-		elif weapon == secondary:
-			weapon.clip = max_clip
+		if GAME_NAME == 'csgo':
+			we = player.get_active_weapon()
+			weapon = (we.item_definition_index)
+			max_clip = weapon_manager[weapon.classname].clip
+			if weapon == primary:
+				weapon.clip = max_clip
+			elif weapon == secondary:
+				weapon.clip = max_clip
+		else:
+			weapon = player.active_weapon
+			max_clip = weapon_manager[weapon.classname].clip
+			if weapon == primary:
+				weapon.clip = max_clip
+			elif weapon == secondary:
+				weapon.clip = max_clip
 #===================
 # Infect
 #===================
