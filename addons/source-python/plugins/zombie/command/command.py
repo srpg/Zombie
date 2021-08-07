@@ -68,7 +68,7 @@ def sayfilter(command, index, teamonly):
 					market_alive.send(player.index, green='\x04')
 				return False
 			elif text == 'ztele':
-				if notplayer player.get_property_bool('pl.deadflag'):
+				if not player.get_property_bool('pl.deadflag'):
 					zombie.teleport(userid)
 				else:
 					ztele.send(player.index, green='\x04')
