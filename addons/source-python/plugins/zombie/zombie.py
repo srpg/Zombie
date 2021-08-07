@@ -105,10 +105,7 @@ def infopanel(attacker):
 #======================
 
 __FILEPATH__    = path.Path(__file__).dirname()
-DATABASE_STORAGE_METHOD = SQLiteManager
-database = None
-databasePath = os.path.join(__FILEPATH__ + '/players.sqlite')
-players = PlayerManager()
+
 if GAME_NAME == 'csgo':
 	DOWNLOADLIST_PATH  = os.path.join(__FILEPATH__ + '/csgo.txt')
 else:
