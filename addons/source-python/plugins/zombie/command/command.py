@@ -57,20 +57,21 @@ def sayfilter(command, index, teamonly):
 		if userid and command:
 			text = command[0].replace('!', '', 1).replace('/', '', 1).lower()
 			args = command.arg_string
+			player = Player.from_userid(userid)
 			if text == 'market':
-				if not Player(index_from_userid(userid)).get_property_bool('pl.deadflag'):
-					if not Player(index_from_userid(userid)).team == 2:
+				if not player.get_property_bool('pl.deadflag'):
+					if not player.team == 2:
 						market_main(userid)
 					else:
-						market_ct.send(index_from_userid(userid), green='\x04')
+						market_ct.send(player.index, green='\x04')
 				else:
-					market_alive.send(index_from_userid(userid), green='\x04')
+					market_alive.send(player.index, green='\x04')
 				return False
 			elif text == 'ztele':
-				if not Player(index_from_userid(userid)).get_property_bool('pl.deadflag'):
+				if notplayer player.get_property_bool('pl.deadflag'):
 					zombie.teleport(userid)
 				else:
-					ztele.send(index_from_userid(userid), green='\x04')
+					ztele.send(player.index, green='\x04')
 				return False
 
 def market_main(userid):
@@ -115,21 +116,21 @@ def main_menu_callback(_menu, _index, _option):
 		userid = userid_from_index(_index)
 		if choice == 'Rifle':
 			market_rifle(userid)
-			zombie.players[userid]['choice'] = 'rifle'
+			zombie.ZombiePlayer.from_userid(userid).primary_primary = 'rifle'
 		elif choice == 'Secondary':
 			market(userid)
-			zombie.players[userid]['choice'] = 'secondary'
+			zombie.ZombiePlayer.from_userid(userid).secondary_pistol = 'secondary'
             
 def menu_callback(_menu, _index, _option):
 	choice = _option.value
 	if choice:
 		userid = userid_from_index(_index)
-		player = Player(index_from_userid(userid))
+		player = ZombiePlayer(index_from_userid(userid))
 		player.cash -= choice.cost
-		if zombie.players[userid]['choice'] == 'secondary':
+		if player.secondary_pistol == 'secondary':
 			if player.secondary:
 				player.secondary.remove()
-		elif zombie.players[userid]['choice'] == 'rifle':
+		elif player.primary_primary == 'rifle':
 			if player.primary:
 				player.primary.remove()
 		player.give_named_item('%s' % (choice.name))
