@@ -95,7 +95,8 @@ def infopanel(attacker):
 	if not player.player_target == False:
 		target = Player.from_userid(player.player_target)
 		if not target.dead and target.health > 0:
-			hudhint(attacker ,__msg__ = '%s: %s' % (target.name, target.health))
+			__msg__ = '%s: %s' % (target.name, target.health)
+			hudhint(attacker, msg)
 		else:
 			player.player_target = False
 
@@ -310,7 +311,7 @@ def infect_first(userid):
 				if player.secondary:
 					player.secondary.remove()
 				player.give_named_item('weapon_%s' % (weapon_secondary))
-			player.armor = 100
+			player.armor = 10000
 			if GAME_NAME == 'cstrike' or GAME_NAME == 'csgo':
 				player.set_property_bool('m_bHasHelmet', 1)
 			queue_command_string('mp_humanteam ct')
