@@ -36,10 +36,11 @@ def sayfilter(command, index, teamonly):
 		if userid and command:
 			text = command[0].replace('!', '', 1).replace('/', '', 1).lower()
 			args = command.arg_string
+			player = Player.from_userid(userid)
 			if text == 'zprop':
 				if not GAME_NAME == 'csgo':
-					if not Player(index_from_userid(userid)).team == 1:
-						if not Player(index_from_userid(userid)).dead:
+					if not player.team == 1:
+						if not player.dead:
 							zprop_menu(userid)
 							return False
 				else:
@@ -50,14 +51,15 @@ def zprop_menu(userid):
 	menu = SimpleMenu()
 	if is_queued(menu, index_from_userid(userid)):
 		return
-	menu.append(Text('Zprops\nCurrent Credits: %s' % (zombie.players[userid]['credits'])))
+	menu.append(Text('Zprops\nCurrent Credits: %s' % (zombie.ZombiePlayer.from_userid(userid).have_credits)))
 	menu.append(Text('-' * 25))
-	cab = zombie.players[userid]['credits'] >= 2
-	bar = zombie.players[userid]['credits'] >= 3
-	dr = zombie.players[userid]['credits'] >= 4
-	woo = zombie.players[userid]['credits'] >= 5
-	ga = zombie.players[userid]['credits'] >= 7
-	dump = zombie.players[userid]['credits'] >= 15
+	credits = zombie.ZombiePlayer.from_userid(userid).have_credits
+	cab = credits >= 2
+	bar = credits >= 3
+	dr = credits >= 4
+	woo = credits >= 5
+	ga = credits >= 7
+	dump = credits >= 15
 	menu.append(SimpleOption(1, 'Filing Cabinet[Credits: 2]', '1', cab, cab))
 	menu.append(SimpleOption(2, 'Barrel[Credits: 3]', '2', bar, bar))
 	menu.append(SimpleOption(3, 'Dryer[Credits: 4]', '3', dr, dr))
@@ -73,41 +75,37 @@ def menu_callback(_menu, _index, _option):
 	choice = _option.value
 	if choice:
 		userid = userid_from_index(_index)
+		player = zombie.ZombiePlayer.from_userid(userid)
+		current = player.have_credits
 		if choice == '1':
 			cabinet(userid)
-			current = zombie.players[userid]['credits']
 			current -= 2
-			zombie.players[userid]['credits'] -= 2
+			player.have_credits -= 2
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='2', cur=current, type='Filing Cabinet')
 		elif choice == '2':
 			barrel(userid)
-			current = zombie.players[userid]['credits']
 			current -= 3
-			zombie.players[userid]['credits'] -= 3
+			player.have_credits -= 3
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='3', cur=current, type='Barrek')
 		elif choice == '3':
 			dryer(userid)
-			current = zombie.players[userid]['credits']
 			current -= 4
-			zombie.players[userid]['credits'] -= 4
+			player.have_credits -= 4
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='4', cur=current, type='Dryer')
 		elif choice == '4':
 			crate(userid)
-			current = zombie.players[userid]['credits']
 			current -= 5
-			zombie.players[userid]['credits'] -= 5
+			player.have_credits -= 5
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='5', cur=current, type='Wooden Crate')
 		elif choice == '5':
 			pump(userid)
-			current = zombie.players[userid]['credits']
 			current -= 7
-			zombie.players[userid]['credits'] -= 7
+			player.have_credits -= 7
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='7', cur=current, type='Gas Pump')
 		elif choice == '6':
 			dumpster(userid)
-			current = zombie.players[userid]['credits']
 			current -= 15
-			zombie.players[userid]['credits'] -= 15
+			player.have_credits -= 15
 			zombie.buy.send(index_from_userid(userid), green='\x04',  default='\x07FFB300', price='15', cur=current, type='Dumpster')
 			
 def cabinet(userid):
