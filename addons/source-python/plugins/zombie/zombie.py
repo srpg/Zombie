@@ -70,8 +70,10 @@ class ZombiePlayer(Player):
 
 	def __init__(self, index):
 		super().__init__(index)
-		self.have_credits  = 0
-		self.player_target = False
+		self.have_credits  	= 0
+		self.player_target 	= False
+		self.secondary_pistol 	= False
+		self.primary_primary 	= False
 
 #======================
 # Other
