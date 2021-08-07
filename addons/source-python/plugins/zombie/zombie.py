@@ -115,9 +115,6 @@ else:
 	DOWNLOADLIST_PATH  = os.path.join(__FILEPATH__ + '/css.txt')
 
 def load():
-	global database
-	database = DATABASE_STORAGE_METHOD(databasePath)
-	database.execute('VACUUM')
 	echo_console('[Zombie] Loaded')
 	queue_command_string('bot_quota 20')
 	queue_command_string('bot_quota_mode fill')
