@@ -426,8 +426,9 @@ def player_disconnect(args):
 def round_end(args):
 	queue_command_string('mp_humanteam any')
 	for i in player_list():
-		Player(index_from_userid(i)).switch_team(3) # Move all ct when round ends
-		Player(index_from_userid(i)).unrestrict_weapons(*weapons) # Remove weapon restrict
+		player = Player.from_userid(i)
+		player.switch_team(3) # Move all ct when round ends
+		player.unrestrict_weapons(*weapons) # Remove weapon restrict
 
 @Event('round_start')
 def round_start(ev):
@@ -459,8 +460,10 @@ def player_hurt(args):
 			userid = args.get_int('userid')
 			attacker = args.get_int('attacker')
 			if attacker > 0:
-				if not Player(index_from_userid(userid)).team == Player(index_from_userid(attacker)).team:
-					if not Player(index_from_userid(userid)).team == 2:
+				victim = Player.from_userid(userid)
+				hurter = Player.from_userid(attacker)
+				if not victim.team == hurter.team:
+					if not victim.team == 2:
 						infect(userid)
 						
 @Event('player_hurt')
@@ -468,11 +471,13 @@ def player_hurt(args):
 	userid = args.get_int('userid')
 	attacker = args.get_int('attacker')
 	if attacker > 0:
-		if not Player(index_from_userid(userid)).team == Player(index_from_userid(attacker)).team:
+		victim = Player.from_userid(userid)
+		hurter = Player.from_userid(attacker)
+		if not victim.team == hurter.team:
 			if args.get_string('weapon') == 'hegrenade' and FIRE:
 				burn(userid, 10)
 			else:
-				if not Player(index_from_userid(attacker)).is_bot() and HINT:
+				if not hurter.is_bot() and HINT:
 					Delay(0.1, infopanel, (attacker, userid)) # Not sure will this work properly
 
 @Event('player_death')
@@ -494,7 +499,7 @@ def player_death(args):
 @Event('player_death')
 def player_death(args):
 	userid = args.get_int('userid')
-	Delay(0.1, respawn, (userid,))
+	Player.from_userid(userid).delay(0.1, respawn, (userid,))
 	
 @Event('weapon_fire_on_empty')
 def weapon_fire_on_empty(args):
