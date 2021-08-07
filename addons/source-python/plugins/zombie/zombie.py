@@ -57,11 +57,11 @@ WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
 Weapon_restore = 1 # Will clan member gain weapons back after getting removed
 Boost = 10 # How much extra hp gain when have clan tag for killing
 Speed = 1.10 # Current: 10% increase speed. How many percent increase speed for killing(only once increases)
-KILL_HP = 1 # 1 Activates give full hp after killing zombie
+KILL_HP = 0 # 1 Activates give full hp after killing zombie
 WEAPON = 1 # 1 Activates give deagle and m4a1 for weapon give after first infect
 FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
 HINT = 1 # 1 Tells hudhint hp
-Clan = ['Test'] # Change it to your clan_tag you use for the extra features, currently it check Test clan_tag
+Clan = ['[Best RPG]'] # Change it to your clan_tag you use for the extra features, currently it check Test clan_tag
 weapon_secondary = 'deagle' # Which weapon give for pistols, note requires WEAPON = 1
 weapon_primary = 'm4a1' # Which weapon give for primary, note requires WEAPON = 1
 
@@ -95,10 +95,9 @@ def infopanel(attacker):
 	if not player.player_target == False:
 		target = Player.from_userid(player.player_target)
 		if not target.dead and target.health > 0:
-			__msg__ = '\n%s: %s' % (target.name, target.health)
+			hudhint(attacker ,__msg__ = '%s: %s' % (target.name, target.health))
 		else:
 			player.player_target = False
-		return hudhint(attacker, __msg__)
 
 #======================
 # Download/Load
@@ -138,7 +137,7 @@ def setDl():
 #========================
 def kill_credits(userid):
 	player = ZombiePlayer.from_userid(userid)
-	if player.have_credits >= 15:
+	if not player.have_credits >= 15:
 		player.have_credits += 1
 		cre = player.have_credits
 		Kill.send(player.index, green='\x04', default=default, cred=cre)
@@ -322,7 +321,7 @@ def infect_first(userid):
 				player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
 			player.switch_team(2)
 			player.set_noblock(True)
-			player.health = 10000
+			player.health = 10
 			player.speed = 1.5 # Should make 50% faster walk
 			player.gravity = 0.75 # Should make 25% less have gravity
 			if player.secondary:
