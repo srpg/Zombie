@@ -246,9 +246,9 @@ def player_hurt(args):
 def player_death(args):
 	userid = args.get_int('userid')
 	attacker = args.get_int('attacker')
-	user_player = Player(index_from_userid(userid))
-	attacker_player = Player(index_from_userid(attacker))
 	if attacker > 0:
+		user_player = Player(index_from_userid(userid))
+		attacker_player = Player(index_from_userid(attacker))
 		if not user_player.team == attacker_player.team:
 			kill_credits(attacker)
 			if KILL_HP:
