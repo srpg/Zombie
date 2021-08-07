@@ -1,8 +1,6 @@
 import os, random, path
 # Core
 from core import GAME_NAME, echo_console
-# Sglite
-from sqlite3 import dbapi2 as sqlite
 # Delay
 from listeners.tick import Delay
 # Player/Userid
@@ -67,243 +65,13 @@ Clan = ['Test'] # Change it to your clan_tag you use for the extra features, cur
 weapon_secondary = ['deagle'] # Which weapon give for pistols, note requires WEAPON = 1
 weapon_primary = ['m4a1'] # Which weapon give for primary, note requires WEAPON = 1
 
-class SQLiteManager(object):
-	players = []
-    
-	def __init__(self, path):
-		self.path	= path 
-		self.connection = sqlite.connect(path)
-		self.connection.text_factory = str
-		self.cursor	= self.connection.cursor()
+class ZombiePlayer(Player):
+	caching = True 
 
-		self.cursor.execute("PRAGMA journal_mode=OFF")
-		self.cursor.execute("PRAGMA locking_mode=EXCLUSIVE")
-		self.cursor.execute("PRAGMA synchronous=OFF")
-
-		self.cursor.execute("""\
-			CREATE TABLE IF NOT EXISTS Player (
-			UserID	INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-			steamid VARCHAR(30) NOT NULL,
-			credits		INTEGER DEFAULT 0,
-			name	VARCHAR(30) DEFAULT 'default'
-		)""")
-
-		self.cursor.execute("CREATE INDEX IF NOT EXISTS PlayerIndex ON Player(SteamID);")
-
-	def __del__(self):
-		self.save()
-		self.close()
-        
-	def __contains__(self, key):
-		key = str(key)
-		if key in self.items:
-			return True
-		self.execute("SELECT level FROM Player WHERE steamid=?", key)
-		result = self.cursor.fetchone()
-		if bool(result):
-			self.players.append(key)
-			return True
-
-	def __iter__(self):
-		self.execute("SELECT steamid FROM Player")
-		for steamid in self.cursor.fetchall():
-			yield steamid[0]
-
-	def execute(self, parseString, *args):
-		self.cursor.execute(parseString, args)
-
-	def addPlayer(self, steamid, name):
-		self.execute("INSERT INTO Player (steamid, name) VALUES (?,?)", steamid, name)
-		return self.cursor.lastrowid
-        
-
-	def getUserIdFromSteamId(self, steamId):
-		self.execute("SELECT UserID FROM Player WHERE steamid=?", steamId)
-		value = self.cursor.fetchone()
-		if value is None:
-			return None
-		return value[0]
-
-	def getPlayerStat(self, userid, statType):
-		if not isinstance(userid, int):
-			userid = self.getUserIdFromSteamId(userid)
-		statType = str(statType).replace("'", "''")
-		if hasattr(statType, "__len__"):
-			query = "SELECT " + ",".join( map( str, statType)) + " FROM Player WHERE UserID=?"
-		else:
-			query = "SELECT " + str( statType ) + " FROM Player WHERE UserID=?"
-		self.execute(query, userid)
-		return self.fetchone()
-        
-	def update(self, table, primaryKeyName, primaryKeyValue, options):
-		keys = ""
-		if not isinstance(options, dict):
-			raise ValueError("Expected 'options' argument to be a dictionary, instead received: %s" % type(options).__name__)
-		if options:
-			for key, value in options.iteritems():
-				if isinstance(key, str):
-					key = key.replace("'", "''")
-				if isinstance(value, str):
-					value = value.replace("'", "''")
-				keys += "%s='%s'," % (key, value)
-			keys = keys[:-1]
-			query = "UPDATE " + str(table) + " SET " + keys + " WHERE " + str(primaryKeyName) + "='" + str(primaryKeyValue) + "'"
-			self.execute(query)
-
-	def increment(self, table, primaryKeyName, primaryKeyValue, options):
-		keys = ""
-		if not isinstance(options, dict):
-			raise ValueError("Expected 'options' argument to be a dictionary, instead received: %s" % type(options).__name__)
-		for key, value in options.iteritems():
-			if isinstance(key, str):
-				key = key.replace("'", "''")
-			if isinstance(value, str):
-				value = value.replace("'", "''")
-			keys += "%s=%s+%i," % (key, key, value)
-		keys = keys[:-1]
-		self.execute("UPDATE ? SET %s WHERE ?=?+?" % keys, table, primaryKeyName, primaryKeyName, primaryKeyValue)
-
-	def fetchall(self):
-		trueValues = []
-		for value in self.cursor.fetchall():
-			if isinstance(value, tuple):
-				if len(value) > 1:
-					tempValues = []
-					for tempValue in value:
-						if isinstance(tempValue, int):
-							tempValue = int(tempValue)
-						tempValues.append(tempValue)
-					trueValues.append(tempValues)
-				else:
-					if isinstance(value[0], int):
-						trueValues.append(int(value[0]))
-					else:
-						trueValues.append(value[0])
-			else:
-				if isinstance(value, int):
-					value = int(value)
-				trueValues.append(value)
-		return trueValues
-
-	def fetchone(self):
-		result = self.cursor.fetchone()
-		if hasattr(result, "__iter__"):
-			if len(result) == 1:
-				trueResults = result[0]
-				if isinstance(trueResults, int):
-					trueResults = int(trueResults)
-				return trueResults
-			else:
-				trueResults = []
-				for trueResult in result:
-					if isinstance(trueResult, int):
-						trueResult = int(trueResult)
-					trueResults.append(trueResult)
-				return trueResults
-		if isinstance(result, int):
-			result = int(result)
-		return result    
-
-	def save(self):
-		self.connection.commit()
-
-	def clear(self, saveDatabase = True):
-		players.clearList()
-		self.execute("DROP TABLE Player")
-		if saveDatabase:
-			self.save()
-		self.__init__(self.path)
-		for player in es.getUseridList():
-			players.addPlayer(player)
-
-	def close(self):
-		self.cursor.close()
-		self.connection.close()
-
-class PlayerManager(object):
-	def __init__(self):
-		self.players = {}
-
-	def __getitem__(self, userid):
-		userid = int(userid)
-		if self.__contains__(userid):
-			return self.players[userid]
-		return None
-
-	def __delitem__(self, userid):
-		self.removePlayer(userid)
-
-	def __iter__(self):
-		for player in self.players:
-			yield self.players[player]
-
-	def __contains__(self, userid):
-		userid = int(userid)
-		return bool(userid in self.players)
-
-	def addPlayer(self, userid):
-		self.players[int(userid)] = PlayerObject(userid)
-
-	def removePlayer(self, userid):
-		userid = int(userid)
-		if self.__contains__(userid):
-			del self.players[userid] # calls deconstructor on PlayerObject class
-
-	def getPlayer(self, userid):
-		return self.__getitem__(userid)
-
-	def clearList(self):
-		self.players.clear()
-
-class PlayerObject(object):
-	def __init__(self, userid):
-		self.userid   = int(userid)
-		self.steamid  = Player(index_from_userid(userid)).steamid
-		self.name     = Player(index_from_userid(userid)).name
-		self.isbot    = Player(index_from_userid(userid)).is_bot()
-		self.currentAttributes = {}
-		self.oldAttributes     = {}
-		self.dbUserid = database.getUserIdFromSteamId(self.steamid)
-		if self.dbUserid is None:
-			self.dbUserid = database.addPlayer(self.steamid, self.name)
-		self.update()
-		self.playerAttributes = {}
-
-	def __del__(self):
-		self.commit()
-
-	def __int__(self):
-		return self.userid
-
-	def __str__(self):
-		return str(self.userid)
-
-	def __getitem__(self, item):
-		if item in self.currentAttributes:
-			return self.currentAttributes[item]
-		if item in self.playerAttributes:
-			return self.playerAttributes[item]
-		return None
-
-	def __setitem__(self, item, value):
-		if item in self.currentAttributes:
-			self.currentAttributes[item] = value
-		else:
-			self.playerAttributes[item] = value
-
-	def commit(self):
-		for key, value in self.currentAttributes.items():
-			if key in self.oldAttributes:
-					database.execute("UPDATE Player SET %s=? WHERE UserID=?" % key, value, self.dbUserid)    
-		self.oldAttributes = self.currentAttributes.copy()
-
-	def update(self):
-		database.execute("SELECT * FROM Player WHERE UserID=?", self.dbUserid)
-		result = database.fetchone()
-		UserID, steamid, credits, name = result
-
-		for option in ('steamid', 'credits', 'name'):
-			self.oldAttributes[option] = self.currentAttributes[option] = locals()[option]
+	def __init__(self, index):
+		super().__init__(index)
+		self.have_credits  = 0
+		self.player_target = False
 
 #======================
 # Other
@@ -320,9 +88,15 @@ else:
 def hudhint(userid, text):
 	HintText(message=text).send(index_from_userid(userid))
 
-def infopanel(attacker, userid):
-	player = Player(index_from_userid(userid))
-	return hudhint(attacker, 'Name: %s\nHealth: %s' % (player.name, player.health)) # Make later a code that can use delay every 2seconds, to prevent hudhint spams
+def infopanel(attacker):
+	player = ZombiePlayer.from_userid(attacker)
+	if not player.player_target == False:
+		target = Player.from_userid(player.player_target)
+		if not target.dead and target.health > 0:
+			__msg__ = '\n%s: %s' % (target.name, target.health)
+		else:
+			player.player_target = False
+		return hudhint(attacker, __msg__)
 
 #======================
 # Download/Load
@@ -367,10 +141,11 @@ def setDl():
 # Functions
 #========================
 def kill_credits(userid):
-	if not players[userid]['credits'] >= 15:
-		players[userid]['credits'] += 1
-		cre = players[userid]['credits']
-		Kill.send(index_from_userid(userid), green='\x04', default=default, cred=cre)
+	player = ZombiePlayer.from_userid(userid)
+	if player.have_credits >= 15:
+		player.have_credits += 1
+		cre = player.have_credits
+		Kill.send(player.index, green='\x04', default=default, cred=cre)
 		
 		
 def player_list():
@@ -410,17 +185,6 @@ def respawn(userid):
 @PreEvent('server_cvar', 'player_team', 'player_disconnect', 'player_connect_client')
 def pre_events(game_event):
 	return EventAction.STOP_BROADCAST
-
-@Event('player_activate')
-def player_activate(args):
-	userid = args.get_int('userid')
-	players.addPlayer(userid)
-	
-@Event('player_disconnect')
-def player_disconnect(args):
-	userid = args.get_int('userid')
-	if userid in players:
-		del players[userid]
 
 @Event('round_end')
 def round_end(args):
@@ -478,7 +242,9 @@ def player_hurt(args):
 				burn(userid, 10)
 			else:
 				if not hurter.is_bot() and HINT:
-					Delay(0.1, infopanel, (attacker, userid)) # Not sure will this work properly
+					player = ZombiePlayer.from_userid(args['attacker'])
+					player.player_target = userid
+					player.delay(0.1, infopanel, (attacker)) # Not sure will this work properly
 
 @Event('player_death')
 def player_death(args):
