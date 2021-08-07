@@ -11,7 +11,7 @@ Commands:
  - !market to open market menu
  - !zprop to open zprop menu
 
-Currently Avaible Features:
+Currently Available Features:
  - Hegrenade damage ignites zombie(Config able)
  - Full health after kill zombie(Config able)
  - After death zombie respawn back as human
