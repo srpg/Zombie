@@ -96,7 +96,7 @@ def infopanel(attacker):
 		target = Player.from_userid(player.player_target)
 		if not target.dead and target.health > 0:
 			__msg__ = '%s: %s' % (target.name, target.health)
-			hudhint(attacker, msg)
+			hudhint(attacker, __msg__)
 		else:
 			player.player_target = False
 
