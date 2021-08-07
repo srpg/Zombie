@@ -311,7 +311,7 @@ def infect_first(userid):
 				if player.secondary:
 					player.secondary.remove()
 				player.give_named_item('weapon_%s' % (weapon_secondary))
-			player.armor = 10000
+			player.armor = 100
 			if GAME_NAME == 'cstrike' or GAME_NAME == 'csgo':
 				player.set_property_bool('m_bHasHelmet', 1)
 			queue_command_string('mp_humanteam ct')
@@ -322,7 +322,7 @@ def infect_first(userid):
 				player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
 			player.switch_team(2)
 			player.set_noblock(True)
-			player.health = 10
+			player.health = 10000
 			player.speed = 1.5 # Should make 50% faster walk
 			player.gravity = 0.75 # Should make 25% less have gravity
 			if player.secondary:
