@@ -125,7 +125,7 @@ def menu_callback(_menu, _index, _option):
 	choice = _option.value
 	if choice:
 		userid = userid_from_index(_index)
-		player = ZombiePlayer(index_from_userid(userid))
+		player = zombie.ZombiePlayer(index_from_userid(userid))
 		player.cash -= choice.cost
 		if player.secondary_pistol == 'secondary':
 			if player.secondary:

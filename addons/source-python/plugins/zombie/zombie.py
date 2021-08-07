@@ -57,13 +57,13 @@ WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
 Weapon_restore = 1 # Will clan member gain weapons back after getting removed
 Boost = 10 # How much extra hp gain when have clan tag for killing
 Speed = 1.10 # Current: 10% increase speed. How many percent increase speed for killing(only once increases)
-KILL_HP = 0 # 1 Activates give full hp after killing zombie
-WEAPON = 0 # 1 Activates give deagle and m4a1 for weapon give after first infect
-FIRE = 0 # 1 Activates hegrenade hurt ignites enemies
-HINT = 0 # 1 Tells hudhint hp
+KILL_HP = 1 # 1 Activates give full hp after killing zombie
+WEAPON = 1 # 1 Activates give deagle and m4a1 for weapon give after first infect
+FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
+HINT = 1 # 1 Tells hudhint hp
 Clan = ['Test'] # Change it to your clan_tag you use for the extra features, currently it check Test clan_tag
-weapon_secondary = ['deagle'] # Which weapon give for pistols, note requires WEAPON = 1
-weapon_primary = ['m4a1'] # Which weapon give for primary, note requires WEAPON = 1
+weapon_secondary = 'deagle' # Which weapon give for pistols, note requires WEAPON = 1
+weapon_primary = 'm4a1' # Which weapon give for primary, note requires WEAPON = 1
 
 class ZombiePlayer(Player):
 	caching = True 
@@ -240,7 +240,7 @@ def player_hurt(args):
 				if not hurter.is_bot() and HINT:
 					player = ZombiePlayer.from_userid(args['attacker'])
 					player.player_target = userid
-					player.delay(0.1, infopanel, (attacker)) # Not sure will this work properly
+					player.delay(0.1, infopanel, (attacker,)) # Not sure will this work properly
 
 @Event('player_death')
 def player_death(args):
