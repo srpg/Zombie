@@ -52,6 +52,7 @@ buy = SayText2(chat['Zprop_buy'])
 #======================
 # Config Add proper config?
 #======================
+INFECT_HEALTH = 10000 # How much hp get infected players
 Infitebullets = 1 # Activates infinite bullets, if player have clan_tag in config have
 WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
 Weapon_restore = 1 # Will clan member gain weapons back after getting removed
@@ -61,7 +62,7 @@ KILL_HP = 0 # 1 Activates give full hp after killing zombie
 WEAPON = 1 # 1 Activates give deagle and m4a1 for weapon give after first infect
 FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
 HINT = 1 # 1 Tells hudhint hp
-Clan = ['[Best RPG]'] # Change it to your clan_tag you use for the extra features, currently it check Test clan_tag
+Clan = ['[Best RPG]'] # Change it to your clan_tag you use for the extra features, currently it check [Best RPG] clan_tag
 weapon_secondary = 'deagle' # Which weapon give for pistols, note requires WEAPON = 1
 weapon_primary = 'm4a1' # Which weapon give for primary, note requires WEAPON = 1
 
@@ -212,20 +213,7 @@ def player_spawn(event):
 	Market.send(player.index, green='\x04', default=default)
 	global location
 	location = player.origin
-	
-@Event('player_hurt')
-def player_hurt(args):
-	if args.get_string('weapon') == 'knife':
-		if args.get_int('dmg_health') >= 45:
-			userid = args.get_int('userid')
-			attacker = args.get_int('attacker')
-			if attacker > 0:
-				victim = Player.from_userid(userid)
-				hurter = Player.from_userid(attacker)
-				if not victim.team == hurter.team:
-					if not victim.team == 2:
-						infect(userid)
-						
+							
 @Event('player_hurt')
 def player_hurt(args):
 	userid = args.get_int('userid')
@@ -236,6 +224,9 @@ def player_hurt(args):
 		if not victim.team == hurter.team:
 			if args.get_string('weapon') == 'hegrenade' and FIRE:
 				burn(userid, 10)
+			elif args.get_string('weapon') == 'knife' and args.get_int('dmg_health') >= 45:
+				if not victim.team == 2:
+					infect(userid)
 			else:
 				if not hurter.is_bot() and HINT:
 					player = ZombiePlayer.from_userid(args['attacker'])
@@ -257,12 +248,8 @@ def player_death(args):
 				attacker_player.max_health += Boost
 				attacker_player.health = attacker_player.max_health
 				attacker_player.speed = Speed
-            
-@Event('player_death')
-def player_death(args):
-	userid = args.get_int('userid')
 	Player.from_userid(userid).delay(0.1, respawn, (userid,))
-	
+
 @Event('weapon_fire_on_empty')
 def weapon_fire_on_empty(args):
 	if WEAPON_REMOVE:
@@ -312,7 +299,7 @@ def infect_first(userid):
 					player.secondary.remove()
 				player.give_named_item('weapon_%s' % (weapon_secondary))
 			player.armor = 100
-			if GAME_NAME == 'cstrike' or GAME_NAME == 'csgo':
+			if GAME_NAME in ['cstrike', 'csgo']:
 				player.set_property_bool('m_bHasHelmet', 1)
 			queue_command_string('mp_humanteam ct')
 		else:
@@ -322,9 +309,9 @@ def infect_first(userid):
 				player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
 			player.switch_team(2)
 			player.set_noblock(True)
-			player.health = 10000
-			player.speed = 1.5 # Should make 50% faster walk
-			player.gravity = 0.75 # Should make 25% less have gravity
+			player.health = INFECT_HEALTH
+			player.speed = 1.5
+			player.gravity = 0.75
 			if player.secondary:
 				player.secondary.remove()
 			elif player.primary:
@@ -342,9 +329,9 @@ def infect(userid):
 	player = Player.from_userid(userid)
 	player.switch_team(2)
 	player.set_noblock(True)
-	player.health = 10000
-	player.speed = 1.5 # Should make 50% faster walk
-	player.gravity = 0.75 # Should make 25% less have gravity
+	player.health = INFECT_HEALTH
+	player.speed = 1.5
+	player.gravity = 0.75
 	if GAME_NAME == 'csgo':
 		player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
 	else:
