@@ -59,8 +59,8 @@ def sayfilter(command, index, teamonly):
 			args = command.arg_string
 			player = Player.from_userid(userid)
 			if text == 'market':
-				if not player.get_property_bool('pl.deadflag'):
-					if not player.team == 2:
+				if not player.dead:
+					if player.team > 2:
 						market_main(userid)
 					else:
 						market_ct.send(player.index, green='\x04')
@@ -68,7 +68,7 @@ def sayfilter(command, index, teamonly):
 					market_alive.send(player.index, green='\x04')
 				return False
 			elif text == 'ztele':
-				if not player.get_property_bool('pl.deadflag'):
+				if not player.dead:
 					zombie.teleport(userid)
 				else:
 					ztele.send(player.index, green='\x04')
