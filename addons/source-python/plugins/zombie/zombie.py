@@ -94,12 +94,16 @@ def hudhint(userid, text):
 def infopanel(attacker):
 	player = ZombiePlayer.from_userid(attacker)
 	if not player.player_target == False:
-		target = Player.from_userid(player.player_target)
-		if not target.dead and target.health > 0:
-			__msg__ = '%s: %s' % (target.name, target.health)
-			hudhint(attacker, __msg__)
-		else:
-			player.player_target = False
+		try:
+			target = Player.from_userid(player.player_target)
+			if not target.dead and target.health > 0:
+				__msg__ = '%s: %s' % (target.name, target.health)
+				hudhint(attacker, __msg__)
+			else:
+				player.player_target = False
+		except:
+			player.player_target == False
+			pass
 
 #======================
 # Download/Load
