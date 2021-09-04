@@ -283,11 +283,11 @@ def weapon_fire(args):
 			weapon = (we.item_definition_index)
 		else:
 			weapon = we
-			max_clip = weapon_manager[weapon.classname].clip
-			if weapon == primary:
-				weapon.clip = max_clip
-			elif weapon == secondary:
-				weapon.clip = max_clip
+		max_clip = weapon_manager[weapon.classname].clip
+		if weapon == primary:
+			weapon.clip = max_clip
+		elif weapon == secondary:
+			weapon.clip = max_clip
 #===================
 # Infect
 #===================
