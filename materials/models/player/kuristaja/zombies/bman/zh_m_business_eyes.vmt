@@ -1,0 +1,9 @@
+VertexLitGeneric
+{
+	"$basetexture" 	"models/player/kuristaja/zombies/bman/zh_m_business_head_d"
+	//"$envmapmask"	 "models/player/kuristaja/zombies/bman/zh_m_business_head_normal"
+
+	"$selfillum" "1"
+	"$selfillummask" "models/player/kuristaja/zombies/bman/zh_m_business_eyes_d"
+
+}

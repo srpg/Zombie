@@ -1,0 +1,6 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/player/kuristaja/zombies/zpz/zombie2_eye"
+	"$selfillum" "1"
+	"$selfillumtint" "[.5 .5 .5]"
+}

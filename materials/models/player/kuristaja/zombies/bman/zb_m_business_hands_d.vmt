@@ -1,0 +1,13 @@
+"VertexLitGeneric"
+{
+	"$basetexture" 	"models/player/kuristaja/zombies/bman/zb_m_business_suit1_d"
+	"$bumpmap"	 "models/player/kuristaja/zombies/bman/zb_m_business_suit_normal"
+
+	"$phong" "1"
+	"$phongexponent" "35"
+	"$phongboost" ".07"
+	"$phongfresnelranges" "[5 6 8]"
+	"$PhongAlbedoTint" "1"
+
+	"$halflambert" "1"
+}

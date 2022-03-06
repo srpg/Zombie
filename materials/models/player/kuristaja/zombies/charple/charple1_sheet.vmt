@@ -1,0 +1,16 @@
+"VertexLitGeneric"
+{
+	"$baseTexture" "models/player/kuristaja/zombies/charple/charple1_sheet"
+	"$bumpmap" "models/player/kuristaja/zombies/charple/charple1_normal"
+
+	"$phong" "1"
+	"$phongexponent" "20"
+	"$phongboost" ".05"
+	"$phongfresnelranges" "[5 6 8]"
+	"$PhongAlbedoTint" "1"
+
+	"$halflambert" "1"
+
+}
+
+
