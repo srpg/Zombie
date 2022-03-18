@@ -27,7 +27,7 @@ def is_queued(_menu, _index):
 				return True
 	return False
 
-@SayCommand(['zrop, '/zrop', '!zrop'])
+@SayCommand(['zrop', '/zrop', '!zrop'])
 def zrop_command(command, index, teamonly):
 	player = Player(index)
 	userid = player.userid
