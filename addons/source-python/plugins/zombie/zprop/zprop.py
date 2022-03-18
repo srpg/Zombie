@@ -35,8 +35,8 @@ def zrop_command(command, index, teamonly):
 		if not player.team == 1:
 			if not player.dead:
 				zprop_menu(userid)
-			else:
-				tell(userid, '\x04Zrops not implented to csgo!')
+	else:
+		tell(userid, '\x04Zrops not implented to csgo!')
 	return False
 				
 def zprop_menu(userid):
