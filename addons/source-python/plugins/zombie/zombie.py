@@ -254,8 +254,8 @@ def player_death(args):
 				attacker_player.speed = Speed
 	Player.from_userid(userid).delay(0.1, respawn, (userid,))
 
-@Event('weapon_fire_on_empty')
-def weapon_fire_on_empty(args):
+@PreEvent('weapon_fire_on_empty')
+def pre_weapon_fire_on_empty(args):
 	if WEAPON_REMOVE:
 		userid = args.get_int('userid')
 		weapon = args.get_string('weapon')
