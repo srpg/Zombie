@@ -1,4 +1,4 @@
-from commands.say import SayFilter
+from commands.say import SayCommand
 from core import GAME_NAME
 from filters.weapons import WeaponIter, WeaponClassIter
 from weapons.manager import weapon_manager
@@ -48,31 +48,28 @@ def remove_idle_weapons():
 		if w.get_property_int('m_hOwnerEntity') in [-1, 0]:
 			w.call_input('Kill')
 
-@SayFilter
-def sayfilter(command, index, teamonly):
-	userid = None
-	if index:
-		userid = useridFromIndex(index)
-	
-		if userid and command:
-			text = command[0].replace('!', '', 1).replace('/', '', 1).lower()
-			args = command.arg_string
-			player = Player.from_userid(userid)
-			if text == 'market':
-				if not player.dead:
-					if player.team > 2:
-						market_main(userid)
-					else:
-						market_ct.send(player.index, green='\x04')
-				else:
-					market_alive.send(player.index, green='\x04')
-				return False
-			elif text == 'ztele':
-				if not player.dead:
-					zombie.teleport(userid)
-				else:
-					ztele.send(player.index, green='\x04')
-				return False
+@SayCommand(['market', '!market', '/market'])
+def market_command(command, index, teamonly):
+	player = Player(index)
+	userid = player.userid
+	if not player.dead:
+		if player.team > 2:
+			market_main(userid)
+		else:
+			market_ct.send(player.index, green='\x04')
+	else:
+		market_alive.send(player.index, green='\x04')
+	return False
+
+@SayCommand(['ztele', '!ztele', '/ztele'])
+def ztele_command(command, index, teamonly):
+	player = Player(index)
+	userid = player.userid
+	if not player.dead:
+		zombie.teleport(userid)
+	else:
+		ztele.send(player.index, green='\x04')
+	return False
 
 def market_main(userid):
 	menu = SimpleMenu()
