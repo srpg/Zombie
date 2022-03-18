@@ -8,7 +8,7 @@ from entities.entity import Entity
 # Menus
 from menus import SimpleMenu, Text, SimpleOption
 # Chat command
-from commands.say import SayFilter
+from commands.say import SayCommand
 # Message
 from messages import SayText2
 # Core
@@ -27,25 +27,17 @@ def is_queued(_menu, _index):
 				return True
 	return False
 
-@SayFilter
-def sayfilter(command, index, teamonly):
-	userid = None
-	if index:
-		userid = userid_from_index(index)
-	
-		if userid and command:
-			text = command[0].replace('!', '', 1).replace('/', '', 1).lower()
-			args = command.arg_string
-			player = Player.from_userid(userid)
-			if text == 'zprop':
-				if not GAME_NAME == 'csgo':
-					if not player.team == 1:
-						if not player.dead:
-							zprop_menu(userid)
-							return False
-				else:
-					tell(userid, '\x04Zrops not implented to csgo!')
-					return False
+@SayCommand(['zrop, '/zrop', '!zrop'])
+def zrop_command(command, index, teamonly):
+	player = Player(index)
+	userid = player.userid
+	if not GAME_NAME == 'csgo':
+		if not player.team == 1:
+			if not player.dead:
+				zprop_menu(userid)
+			else:
+				tell(userid, '\x04Zrops not implented to csgo!')
+	return False
 				
 def zprop_menu(userid):
 	menu = SimpleMenu()
