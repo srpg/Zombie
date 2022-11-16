@@ -334,7 +334,7 @@ def infect(userid):
 		player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
 	else:
 		player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-	for weapon is player.weapons():
+	for weapon in player.weapons():
 		if weapon.classname != 'weapon_knife':
 			weapon.remove()
 	player.restrict_weapons(*weapons)
