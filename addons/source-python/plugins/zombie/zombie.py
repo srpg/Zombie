@@ -8,7 +8,7 @@ from players.entity import Player
 from players.helpers import index_from_userid, userid_from_index
 from filters.players import PlayerIter
 # Entity
-from entities.entity import Entity, BaseEntity
+from entities.entity import Entity
 # Model
 from engines.precache import Model
 # Download
@@ -23,7 +23,6 @@ from messages import SayText2, HintText
 from translations.strings import LangStrings
 # Weapon
 from filters.weapons import WeaponClassIter
-from weapons.manager import weapon_manager
 # Zombies
 from zombie.command import command
 from zombie.zprop import zprop
@@ -276,18 +275,13 @@ def weapon_fire(args):
 	userid = args.get_int('userid')
 	player = Player(index_from_userid(userid))
 	if player.clan_tag in Clan and Infitebullets:
-		primary = player.primary
-		secondary = player.secondary
-		we = player.get_active_weapon()
-		if GAME_NAME == 'csgo':
-			weapon = (we.item_definition_index)
-		else:
-			weapon = we
-		max_clip = weapon_manager[weapon.classname].clip
-		if weapon == primary:
-			weapon.clip = max_clip
-		elif weapon == secondary:
-			weapon.clip = max_clip
+		weapon = player.get_active_weapon()
+		if weapon is None:
+			return
+		try:
+			weapon.clip += 2
+		except ValueError:
+			return
 #===================
 # Infect
 #===================
@@ -304,7 +298,7 @@ def infect_first(userid):
 				player.give_named_item('weapon_%s' % (weapon_secondary))
 			player.armor = 100
 			if GAME_NAME in ['cstrike', 'csgo']:
-				player.set_property_bool('m_bHasHelmet', 1)
+				player.has_helmet = True
 			queue_command_string('mp_humanteam ct')
 		else:
 			if GAME_NAME == 'csgo':
@@ -340,14 +334,12 @@ def infect(userid):
 		player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
 	else:
 		player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-	if player.secondary:
-		player.secondary.remove()
-	elif player.primary:
-		player.primary.remove()
+	for weapon is player.weapons():
+		if weapon.classname != 'weapon_knife':
+			weapon.remove()
 	player.restrict_weapons(*weapons)
 	command.remove_idle_weapons()
-	infected_player = Player.from_userid(userid)
 	random_model = random.choice(zombie_models)        
-	infected_player.set_model(Model(random_model))
-	infect_message.send(name=infected_player.name, default=default, green='\x04')
+	player.set_model(Model(random_model))
+	infect_message.send(name=player.name, default=default, green='\x04')
 	Delay(0.1, round_checker)
