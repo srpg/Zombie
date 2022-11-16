@@ -1,10 +1,9 @@
 from commands.say import SayCommand
 from core import GAME_NAME
 from filters.weapons import WeaponIter, WeaponClassIter
-from weapons.manager import weapon_manager
 
 from players.entity import Player
-from players.helpers import index_from_userid, userid_from_index
+from players.helpers import index_from_userid
 
 from menus import SimpleMenu, Text, SimpleOption
 from menus import PagedOption, PagedMenu
@@ -37,15 +36,9 @@ def is_queued(_menu, _index):
 				return True
 	return False
 
-def useridFromIndex(index):
-	return userid_from_index(index)
-
-def indexFromUserid(userid):
-	return index_from_userid(userid)
-
 def remove_idle_weapons():
 	for w in WeaponIter.iterator():
-		if w.get_property_int('m_hOwnerEntity') in [-1, 0]:
+		if w.owner_handle in [-1, 0]:
 			w.call_input('Kill')
 
 @SayCommand(['market', '!market', '/market'])
@@ -82,27 +75,29 @@ def market_main(userid):
 	menu.append(Text('-' * 25))
 	menu.append(SimpleOption(close, 'Close', None))
 	menu.select_callback = main_menu_callback
-	menu.send(indexFromUserid(userid))
+	menu.send(index_from_userid(userid))
 
 def market_rifle(userid):
 	menu = PagedMenu(title = 'Market\nSection: Primaries\n')
 	if is_queued(menu, index_from_userid(userid)):
 		return
+	player = Player.from_userid(userid)
 	for weapon in WeaponClassIter(is_filters='primary'):
-		afford = Player(index_from_userid(userid)).cash >= weapon.cost
+		afford = player.cash >= weapon.cost and not player.dead
 		menu.append(PagedOption('%s [%s$]' % (weapon.basename.upper(), weapon.cost), weapon, afford, afford))
 	menu.select_callback = menu_callback
-	menu.send(indexFromUserid(userid))
+	menu.send(index_from_userid(userid))
     
 def market(userid):
 	menu = PagedMenu(title = 'Market\nSection: Pistols\n')
 	if is_queued(menu, index_from_userid(userid)):
 		return
+	player = Player.from_userid(userid)
 	for weapon in WeaponClassIter(is_filters='pistol'):
-		afford = Player(index_from_userid(userid)).cash >= weapon.cost
-		menu.append(PagedOption('%s [%s$]' % (weapon.basename.upper(), weapon.cost), weapon, afford, afford))
+		afford = player.cash >= weapon.cost and not player.dead
+		menu.append(PagedOption(f'{weapon.basename.title()} [{weapon.cost}$]', weapon, afford, afford))
 	menu.select_callback = menu_callback
-	menu.send(indexFromUserid(userid))
+	menu.send(index_from_userid(userid))
 
 #==================================
 # Menu Call Backs
@@ -121,8 +116,7 @@ def main_menu_callback(_menu, _index, _option):
 def menu_callback(_menu, _index, _option):
 	choice = _option.value
 	if choice:
-		userid = userid_from_index(_index)
-		player = zombie.ZombiePlayer(index_from_userid(userid))
+		player = zombie.ZombiePlayer(_index)
 		player.cash -= choice.cost
 		if player.secondary_pistol == 'secondary':
 			if player.secondary:
@@ -130,5 +124,5 @@ def menu_callback(_menu, _index, _option):
 		elif player.primary_primary == 'rifle':
 			if player.primary:
 				player.primary.remove()
-		player.give_named_item('%s' % (choice.name))
-		weapon_tell.send(index_from_userid(userid), weapon=choice.basename.upper(), price=choice.cost, green='\x04', cyan=zombie.cyan, default=zombie.default)
+		player.give_named_item(f'{choice.name}')
+		weapon_tell.send(_index, weapon=choice.basename.title(), price=choice.cost, green='\x04', cyan=zombie.cyan, default=zombie.default)
