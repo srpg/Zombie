@@ -116,8 +116,23 @@ class ZombiePlayer(Player):
 				weapon_remove.send(self.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
 				if Weapon_restore == 0:
 					return
-				self.give_named_item(f'weapon_{weapon}')
+				self.give_named_item(f'weapon_ {weapon}')
 			restore.send(self.index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green='\x04')
+
+	def give_weapons_ct(self):
+		if not self.team == 3:
+			return
+		self.armor = 100
+		self.has_helmet = True
+		self.set_noblock(True)
+		queue_command_string('mp_humanteam ct')
+		if WEAPON == 0:
+			return
+		for weapon in self.weapons():
+			if weapon.classname != 'weapon_knife':
+				weapon.remove()
+		self.give_named_item(f'weapon_{weapon_primary}')
+		self.give_named_item(f'weapon_{weapon_secondary}')
 
 	def give_kill_bonus(self):
 		if not self.have_credits >= 15:
