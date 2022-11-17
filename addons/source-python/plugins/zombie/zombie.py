@@ -269,6 +269,9 @@ def round_start(ev):
 		if userid:
 			player = ZombiePlayer(index_from_userid(userid))
 			player.delay(15, player.infect, ('first',))
+			for i in player_list():
+				ct = ZombiePlayer.from_userid(i)
+				ct.delay(16, self..give_weapons_ct)
 
 @Event('player_spawn')
 def player_spawn(event):
