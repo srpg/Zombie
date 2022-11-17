@@ -116,7 +116,7 @@ class ZombiePlayer(Player):
 				weapon_remove.send(self.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
 				if Weapon_restore == 0:
 					return
-				self.give_named_item(f'weapon_ {weapon}')
+				self.give_named_item(f'weapon_{weapon}')
 			restore.send(self.index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green='\x04')
 
 	def give_kill_bonus(self):
