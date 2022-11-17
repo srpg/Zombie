@@ -57,11 +57,11 @@ WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
 Weapon_restore = 1 # Will clan member gain weapons back after getting removed
 Boost = 10 # How much extra hp gain when have clan tag for killing
 Speed = 1.10 # Current: 10% increase speed. How many percent increase speed for killing(only once increases)
-KILL_HP = 0 # 1 Activates give full hp after killing zombie
+KILL_HP = 1 # 1 Activates give full hp after killing zombie
 WEAPON = 1 # 1 Activates give deagle and m4a1 for weapon give after first infect
 FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
 HINT = 1 # 1 Tells hudhint hp
-Clan = ['[Best RPG]'] # Change it to your clan_tag you use for the extra features, currently it check [Best RPG] clan_tag
+Clan = '[Best RPG]' # Change it to your clan_tag you use for the extra features, currently it check [Best RPG] clan_tag
 weapon_secondary = 'deagle' # Which weapon give for pistols, note requires WEAPON = 1
 weapon_primary = 'm4a1' # Which weapon give for primary, note requires WEAPON = 1
 
@@ -75,6 +75,77 @@ class ZombiePlayer(Player):
 		self.secondary_pistol 	= False
 		self.primary_primary 	= False
 
+	def infect(self, type=None):
+		self.switch_team(2)
+		self.set_noblock(True)
+		self.health = INFECT_HEALTH
+		self.speed = 1.5
+		self.gravity = 0.75
+		if GAME_NAME == 'csgo':
+			self.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
+		else:
+			self.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
+		for weapon in self.weapons():
+			if weapon.classname != 'weapon_knife':
+				weapon.remove()
+		self.restrict_weapons(*weapons)
+		random_model = random.choice(zombie_models)        
+		self.set_model(Model(random_model))
+		infect_message.send(name=self.name, default=default, green='\x04')
+		Delay(0.1, round_checker)
+		if not type is None:
+			global location
+			self.origin = location
+
+	def uninfect(self):
+		self.unrestrict_weapons(*weapons)
+		self.switch_team(3)
+		self.spawn()
+		res.send(self.index, green='\x04', default=default)
+
+	def give_weapons_back(self, weapon):
+		if self.is_bot():
+			return
+		if not self.have_clan_benefit():
+			return
+		if WEAPON_REMOVE == 0:
+			return
+		for weapons in self.weapons():
+			if weapons.classname.replace('weapon_', '', 1) == weapon:
+				weapons.remove()
+				weapon_remove.send(self.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
+				if Weapon_restore == 0:
+					return
+				self.give_named_item(f'weapon_ {weapon}')
+			restore.send(self.index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green='\x04')
+
+	def give_kill_bonus(self):
+		if not self.have_credits >= 15:
+			self.have_credits += 1
+			Kill.send(self.index, green='\x04', default=default, cred=self.have_credits)
+		if KILL_HP == 1:
+			self.health = 100
+		if self.have_clan_benefit():
+			self.max_health += Boost
+			self.health = self.max_health
+			self.speed = Speed
+
+	def infinite_clip(self):
+		if self.is_bot():
+			return
+		if self.have_clan_benefit():
+			if Infitebullets:
+				weapon = self.get_active_weapon()
+				if weapon is None:
+					return
+				try:
+					weapon.clip += 1
+				except ValueError:
+					return
+
+	def have_clan_benefit(self):
+		if Clan == self.clan_tag:
+			return True
 #======================
 # Other
 #======================
@@ -140,14 +211,6 @@ def setDl():
 #========================
 # Functions
 #========================
-def kill_credits(userid):
-	player = ZombiePlayer.from_userid(userid)
-	if not player.have_credits >= 15:
-		player.have_credits += 1
-		cre = player.have_credits
-		Kill.send(player.index, green='\x04', default=default, cred=cre)
-		
-		
 def player_list():
 	pl = []
 	for player in PlayerIter('alive'):
@@ -166,18 +229,6 @@ def burn(userid, duration):
 		Entity(index_from_userid(userid)).call_input('IgniteLifetime', float(duration))
 	except ValueError:
 		pass
-
-def teleport(userid):
-	global location
-	Player(index_from_userid(userid)).teleport(location)
-	Tp.send(index_from_userid(userid), green='\x04', default=default)
-    
-def respawn(userid):
-	player = Player(index_from_userid(userid))
-	player.spawn(True)
-	player.switch_team(3)
-	player.unrestrict_weapons(*weapons)
-	res.send(index_from_userid(userid), green='\x04', default=default)
 
 #===================
 # Events
@@ -201,9 +252,8 @@ def round_start(ev):
 	if pl:
 		userid = random.choice(pl)
 		if userid:
-			Player(index_from_userid(userid)).delay(15, infect_first, (userid,))
-			#infect_first(userid)
-
+			player = ZombiePlayer(index_from_userid(userid))
+			player.delay(15, player.infect, ('first',))
 
 @Event('player_spawn')
 def player_spawn(event):
@@ -222,19 +272,18 @@ def player_hurt(args):
 	userid = args.get_int('userid')
 	attacker = args.get_int('attacker')
 	if attacker > 0:
-		victim = Player.from_userid(userid)
-		hurter = Player.from_userid(attacker)
+		victim = ZombiePlayer.from_userid(userid)
+		hurter = ZombiePlayer.from_userid(attacker)
 		if not victim.team == hurter.team:
 			if args.get_string('weapon') == 'hegrenade' and FIRE:
 				burn(userid, 10)
 			elif args.get_string('weapon') == 'knife' and args.get_int('dmg_health') >= 45:
 				if not victim.team == 2:
-					infect(userid)
+					victim.infect()
 			else:
 				if not hurter.is_bot() and HINT:
-					player = ZombiePlayer.from_userid(args['attacker'])
-					player.player_target = userid
-					player.delay(0.1, infopanel, (attacker,)) # Not sure will this work properly
+					hurter.player_target = userid
+					hurter.delay(0.1, infopanel, (attacker,))
 
 @Event('player_death')
 def player_death(args):
@@ -242,104 +291,17 @@ def player_death(args):
 	attacker = args.get_int('attacker')
 	if attacker > 0:
 		user_player = Player(index_from_userid(userid))
-		attacker_player = Player(index_from_userid(attacker))
+		attacker_player = ZombiePlayer(index_from_userid(attacker))
 		if not user_player.team == attacker_player.team:
-			kill_credits(attacker)
-			if KILL_HP:
-				attacker_player.health = 100
-			if attacker_player.clan_tag in Clan:
-				attacker_player.max_health += Boost
-				attacker_player.health = attacker_player.max_health
-				attacker_player.speed = Speed
-	Player.from_userid(userid).delay(0.1, respawn, (userid,))
+			attacker_player.give_kill_bonus()
+	ZombiePlayer.from_userid(userid).uninfect()
 
 @PreEvent('weapon_fire_on_empty')
 def pre_weapon_fire_on_empty(args):
-	if WEAPON_REMOVE:
-		userid = args.get_int('userid')
-		weapon = args.get_string('weapon')
-		player = Player(index_from_userid(userid))
-		if player.primary:
-			player.primary.remove()
-		elif player.secondary:
-			player.secondary.remove()
-		if not player.is_bot():
-			weapon_remove.send(player.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
-			if player.clan_tag in Clan and Weapon_restore:
- 				player.give_named_item('weapon_%s' % (weapon))
- 				Clan_Tag = player.clan_tag
- 				restore.send(player.index, weapons=weapon, clan=Clan_Tag, default=default, cyan=cyan, green='\x04')
+	userid = args.get_int('userid')
+	ZombiePlayer.from_userid(userid).give_weapons_back(args.get_string('weapon'))
 
 @Event('weapon_fire')
 def weapon_fire(args):
 	userid = args.get_int('userid')
-	player = Player(index_from_userid(userid))
-	if player.clan_tag in Clan and Infitebullets:
-		weapon = player.get_active_weapon()
-		if weapon is None:
-			return
-		try:
-			weapon.clip += 2
-		except ValueError:
-			return
-#===================
-# Infect
-#===================
-
-def infect_first(userid):
-	for player in PlayerIter('alive'):
-		if player.userid != userid:
-			player.switch_team(3)
-			player.set_noblock(True)
-			if WEAPON:
-				player.give_named_item('weapon_%s' % (weapon_primary))
-				if player.secondary:
-					player.secondary.remove()
-				player.give_named_item('weapon_%s' % (weapon_secondary))
-			player.armor = 100
-			if GAME_NAME in ['cstrike', 'csgo']:
-				player.has_helmet = True
-			queue_command_string('mp_humanteam ct')
-		else:
-			if GAME_NAME == 'csgo':
-				player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
-			else:
-				player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-			player.switch_team(2)
-			player.set_noblock(True)
-			player.health = INFECT_HEALTH
-			player.speed = 1.5
-			player.gravity = 0.75
-			if player.secondary:
-				player.secondary.remove()
-			elif player.primary:
-				player.primary.remove()
-			player.restrict_weapons(*weapons)
-			global location
-			player.teleport(location)
-	infected_player = Player.from_userid(userid)
-	random_model = random.choice(zombie_models)        
-	infected_player.set_model(Model(random_model))
-	infect_message.send(name=infected_player.name, default=default, green='\x04')
-	Delay(0.1, round_checker)
-
-def infect(userid):
-	player = Player.from_userid(userid)
-	player.switch_team(2)
-	player.set_noblock(True)
-	player.health = INFECT_HEALTH
-	player.speed = 1.5
-	player.gravity = 0.75
-	if GAME_NAME == 'csgo':
-		player.emit_sound(sample='sound/zombie/ze-infected3.mp3',volume=1.0,attenuation=0.5)
-	else:
-		player.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-	for weapon in player.weapons():
-		if weapon.classname != 'weapon_knife':
-			weapon.remove()
-	player.restrict_weapons(*weapons)
-	command.remove_idle_weapons()
-	random_model = random.choice(zombie_models)        
-	player.set_model(Model(random_model))
-	infect_message.send(name=player.name, default=default, green='\x04')
-	Delay(0.1, round_checker)
+	ZombiePlayer.from_userid(userid).infinite_clip()
