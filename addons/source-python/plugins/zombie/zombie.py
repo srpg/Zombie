@@ -116,7 +116,7 @@ class ZombiePlayer(Player):
 				weapon_remove.send(self.index, weapons=weapon, default=default, cyan=cyan, green='\x04')
 				if Weapon_restore == 0:
 					return
-				self.give_named_item(f'weapon_ {weapon}')
+				self.give_named_item(f'weapon_{weapon}')
 			restore.send(self.index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green='\x04')
 
 	def give_weapons_ct(self):
@@ -202,7 +202,6 @@ else:
 	DOWNLOADLIST_PATH  = os.path.join(__FILEPATH__ + '/css.txt')
 
 def load():
-	echo_console('[Zombie] Loaded')
 	queue_command_string('bot_quota 20')
 	queue_command_string('bot_quota_mode fill')
 	queue_command_string('mp_roundtime 5')
