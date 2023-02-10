@@ -187,8 +187,7 @@ def infopanel(attacker):
 			else:
 				player.player_target = False
 		except:
-			player.player_target == False
-			pass
+			player.player_target = False
 
 #======================
 # Download/Load
