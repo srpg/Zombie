@@ -62,6 +62,7 @@ weapon_purchase_alive = SayText2(market_chat['Weapon Puirchase Alive'])
 market_ct = SayText2(market_chat['Market_ct'])
 market_alive =  SayText2(market_chat['Market_alive'])
 ztele =  SayText2(market_chat['Ztele'])
+ztele_alive = SayText2(market_chat['Ztele Alive'])
 weapon_tell = SayText2(market_chat['Weapon'])
 #======================
 # Config
@@ -94,15 +95,17 @@ class ZombiePlayer(Player):
 		self.spawn_origin = None
 
 	def ztele(self):
+		index = self.index
 		if self.dead:
-			return
+			return ztele_alive.send(index, green=green, default=default)
 
 		if self.team < 3:
-			return ztele.send(self.index, green=green, default=default)
-		self.origin = self.spawn_origin
-		Tp.send(self.index, green=green, default=default)
+			return ztele.send(index, green=green, default=default)
 
-	def infect_first(self):
+		self.origin = self.spawn_origin
+		Tp.send(index, green=green, default=default)
+
+	def infect(self):
 		global HAS_INFECTED
 		HAS_INFECTED = True
 		self.switch_team(2)
@@ -121,31 +124,12 @@ class ZombiePlayer(Player):
 		self.set_model(Model(random.choice(zombie_models)))
         
 		infect_message.send(name=self.name, default=default, green='\x04')
-		if self.infect_type is None:
+		if self.infect_type == 'First':
 			self.origin = self.spawn_origin
-
-		for player in PlayerIter('all'):
-			if player.index != self.index:
-				player.switch_team(3)
-				player.godmode = False
-
-
-	def infect(self):
-		self.switch_team(2)
-		self.set_noblock(True)
-		self.health = INFECT_HEALTH
-		self.speed = 1.5
-		self.gravity = 0.75
-		self.emit_sound(sample='ambient/creatures/town_child_scream1.wav',volume=1.0,attenuation=0.5)
-
-		for weapon in self.weapons():
-			if weapon.classname != 'weapon_knife':
-				weapon.remove()
-
-		self.restrict_weapons(*weapons)    
-		self.set_model(Model(random.choice(zombie_models)))
-        
-		infect_message.send(name=self.name, default=default, green='\x04')
+			for player in PlayerIter('all'):
+				if player.index != self.index:
+					player.switch_team(3)
+					player.godmode = False
 
 		round_checker()
 
@@ -156,6 +140,7 @@ class ZombiePlayer(Player):
 		respawn.send(self.index, green=green, default=default)
 
 	def give_weapons_back(self, weapon):
+		index = self.index
 		if self.is_bot():
 			return
 
@@ -168,13 +153,13 @@ class ZombiePlayer(Player):
 		for weapons in self.weapons():
 			if weapons.classname.replace('weapon_', '', 1) == weapon:
 				weapons.remove()
-				weapon_remove.send(self.index, weapons=weapon, default=default, cyan=cyan, green=green)
+				weapon_remove.send(index, weapons=weapon, default=default, cyan=cyan, green=green)
 
 		if Weapon_restore == 0:
 			return
 
 		self.give_named_item(f'weapon_{weapon}')
-		restore.send(self.index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green=green)
+		restore.send(index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green=green)
 
 	def give_weapons_ct(self):
 		if self.team < 3:
@@ -328,7 +313,7 @@ def round_start(ev):
 	if userid:
 		player = ZombiePlayer(index_from_userid(userid))
 		player.infect_type = 'First'
-		player.delay(15, player.infect_first)
+		player.delay(15, player.infect)
 		for others in player_list():
 			ct = ZombiePlayer.from_userid(others)
 			ct.delay(16, ct.give_weapons_ct)
