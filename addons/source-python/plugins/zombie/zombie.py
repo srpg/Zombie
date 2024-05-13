@@ -30,7 +30,7 @@ secondaries = [weapon.name for weapon in WeaponClassIter(is_filters='pistol')]
 
 HAS_INFECTED = False
 
-zprops = {1: '2-Filing Cabinet-models/props/cs_office/file_cabinet1.md', 2: '3-Barrel-models/props/de_train/Barrel.mdl', 3: '4-Dryer-models/props/cs_militia/dryer.mdl', 4: '5-Wooden Crate-models/props_junk/wood_crate001a.mdl', 5: '7-Gas Pump-models/props_wasteland/gaspump001a.mdl', 6: '15-Dumpster-models/props_junk/TrashDumpster01a.mdl'}
+zprops = {1: '2-Filing Cabinet-models/props/cs_office/file_cabinet1.mdl', 2: '3-Barrel-models/props/de_train/Barrel.mdl', 3: '4-Dryer-models/props/cs_militia/dryer.mdl', 4: '5-Wooden Crate-models/props_junk/wood_crate001a.mdl', 5: '7-Gas Pump-models/props_wasteland/gaspump001a.mdl', 6: '15-Dumpster-models/props_junk/TrashDumpster01a.mdl'}
 close = 0
 zombie_models = ['models/player/zh/zh_charple001.mdl','models/player/zh/zh_corpse002.mdl','models/player/zh/zh_zombie003.mdl','models/player/ics/hellknight_red/t_guerilla.mdl']
 
@@ -49,10 +49,16 @@ Market = SayText2(chat['Market'])
 Tp = SayText2(chat['Teleport'])
 infect_message = SayText2(chat['Infect_first'])
 weapon_remove = SayText2(chat['Weapon_remove'])
-res = SayText2(chat['Respawn'])
+respawn = SayText2(chat['Respawn'])
 restore = SayText2(chat['Weapon_restore'])
 buy = SayText2(chat['Zprop_buy'])
-
+zprop_alive = SayText2(chat['Zprop Alive'])
+zprop_ct = SayText2(chat['Zprop CT'])
+#======================
+# Market Messages
+#======================
+weapon_afford = SayText2(market_chat['Weapon Afford'])
+weapon_purchase_alive = SayText2(market_chat['Weapon Puirchase Alive'])
 market_ct = SayText2(market_chat['Market_ct'])
 market_alive =  SayText2(market_chat['Market_alive'])
 ztele =  SayText2(market_chat['Ztele'])
@@ -140,8 +146,6 @@ class ZombiePlayer(Player):
 		self.set_model(Model(random.choice(zombie_models)))
         
 		infect_message.send(name=self.name, default=default, green='\x04')
-		if self.infect_type is None:
-			self.origin = self.spawn_origin
 
 		round_checker()
 
@@ -149,7 +153,7 @@ class ZombiePlayer(Player):
 		self.unrestrict_weapons(*weapons)
 		self.switch_team(3)
 		self.spawn()
-		res.send(self.index, green=green, default=default)
+		respawn.send(self.index, green=green, default=default)
 
 	def give_weapons_back(self, weapon):
 		if self.is_bot():
@@ -405,13 +409,13 @@ def ztele_command(command, index, teamonly):
 	ZombiePlayer(index).ztele()
 	return False
 
-@SayCommand(['zrop', '/zrop', '!zrop'])
+@SayCommand(['zprop', '/zprop', '!zprop'])
 def zrop_command(command, index, teamonly):
 	player = Player(index)
 	if player.team < 3:
-		return
+		return zprop_ct.send(index, green=green, default=default)
 	if player.dead:
-		return
+		return zprop_alive.send(index, green=green, default=default)
 	zprop_menu.send(index)
 	return False
 #==========================
@@ -429,10 +433,12 @@ def market_secondary_select(_menu, _index, _option):
 	choice = _option.value
 	if choice:
 		player = Player(_index)
-		if player.dead:
-			return
 		price = choice.cost
 		weapon = choice.basename.title()
+
+		if player.dead:
+			return weapon_purchase_alive.send(_index, weapon=weapon, green=green, cyan=cyan, default=default)
+
 		if player.cash >= price:
 			player.cash -= price
 
@@ -443,14 +449,19 @@ def market_secondary_select(_menu, _index, _option):
 			player.give_named_item(choice.name)
 			weapon_tell.send(_index, weapon=weapon, price=price, green=green, cyan=cyan, default=default)
 
+		else:
+			weapon_afford.send(_index, weapon=weapon, missing=int(price - player.cash), green=green, cyan=cyan, default=default)
+
 def market_primary_select(_menu, _index, _option):
 	choice = _option.value
 	if choice:
 		player = Player(_index)
-		if player.dead:
-			return
 		price = choice.cost
 		weapon = choice.basename.title()
+
+		if player.dead:
+			return weapon_purchase_alive.send(_index, weapon=weapon, green=green, cyan=cyan, default=default)
+
 		if player.cash >= price:
 			player.cash -= price
 
@@ -461,6 +472,9 @@ def market_primary_select(_menu, _index, _option):
 			player.give_named_item(choice.name)
 			weapon_tell.send(_index, weapon=weapon, price=price, green=green, cyan=cyan, default=default)
 
+		else:
+			weapon_afford.send(_index, weapon=weapon, missing=int(price - player.cash), green=green, cyan=cyan, default=default)
+
 def zprop_menus_select(_menu, _index, _option):
 	choice = _option.value
 	if choice:
@@ -468,8 +482,8 @@ def zprop_menus_select(_menu, _index, _option):
 		if player.dead:
 			return
 		price = int(zprops[choice].split('-')[0])
-		entity_name = zprops[i].split('-')[1]
-		entity_model= zprops[i].split('-')[2]
+		entity_name = zprops[choice].split('-')[1]
+		entity_model= zprops[choice].split('-')[2]
 		if player.have_credits >= price:
 			player.have_credits -= price
 			build_entity(player.userid, entity_model)
@@ -481,14 +495,14 @@ def market_secondaries(menu, index):
 	menu.clear()
 	player = Player(index)
 	for secondary in WeaponClassIter(is_filters='pistol'):
-		afford = player.cash >= secondary.cost
+		afford = player.cash >= secondary.cost and not player.dead
 		menu.append(PagedOption(f'{secondary.basename.title()} [{secondary.cost}$]', secondary, afford, afford))
 
 def market_primaries(menu, index):
 	menu.clear()
 	player = Player(index)
 	for primaries in WeaponClassIter(is_filters='primary'):
-		afford = player.cash >= primaries.cost
+		afford = player.cash >= primaries.cost and not player.dead
 		menu.append(PagedOption(f'{primaries.basename.title()} [{primaries.cost}$]', primaries, afford, afford))
 
 def zprop_menus(menu, index):
@@ -497,7 +511,6 @@ def zprop_menus(menu, index):
 	for i in sorted(zprops):
 		price = int(zprops[i].split('-')[0])
 		name = zprops[i].split('-')[1]
-		model_name = zprops[i].split('-')[2]
 		afford = player.have_credits >= price and not player.dead
 		menu.append(PagedOption(f'{name} [Credits: {price}]', i, afford, afford))
 #==========================
