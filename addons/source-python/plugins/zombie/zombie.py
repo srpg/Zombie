@@ -480,7 +480,11 @@ def zprop_menus_select(_menu, _index, _option):
 	if choice:
 		player = ZombiePlayer(_index)
 		if player.dead:
-			return
+			return zprop_alive.send(_index, green=green, default=default)
+
+		if player.team <= 3:
+			return zprop_ct.send(_index, green=green, default=default)
+
 		price = int(zprops[choice].split('-')[0])
 		entity_name = zprops[choice].split('-')[1]
 		entity_model= zprops[choice].split('-')[2]
