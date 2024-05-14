@@ -276,7 +276,7 @@ def player_list():
 	return pl
 
 def ct_count():
-	return len(PlayerIter(['all', 'ct']))
+	return len(PlayerIter('ct'))
 
 def round_checker():
 	if ct_count() == 0:
@@ -289,7 +289,7 @@ def build_entity(userid, entity_model):
 	else:
 		entity = Entity.create('prop_physics')
 	entity.model = Model(entity_model)
-	entity.origin = player.view_cordinates()
+	entity.origin = player.get_view_coordinates()
 	entity.spawn()
 
 #===================
