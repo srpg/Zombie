@@ -1,4 +1,5 @@
-import random, path
+import random
+from path import Path
 #   Commands
 from commands.say import SayCommand
 #   Engine
@@ -11,6 +12,7 @@ from events.hooks import PreEvent, EventAction
 from events import Event
 #   Filters
 from filters.weapons import WeaponClassIter
+from filters.weapons import WeaponIter
 from filters.players import PlayerIter
 #   Player
 from players.entity import Player
@@ -68,16 +70,27 @@ weapon_tell = SayText2(market_chat['Weapon'])
 # Config
 #======================
 INFECT_HEALTH = 10000 # How much hp get infected players
-Infitebullets = 1 # Activates infinite bullets, if player have clan_tag in config have
+INFITE_BULLETS = 1 # Activates infinite bullets, if player have clan_tag in config have
+
+INFECT_STAB_RIGHT = 1 # Does infect require right click hit(+45 health damage hit)
+
 WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
-Weapon_restore = 1 # Will clan member gain weapons back after getting removed
-Boost = 10 # How much extra hp gain when have clan tag for killing
-Speed = 1.10 # Current: 10% increase speed. How many percent increase speed for killing(only once increases)
-KILL_HP = 1 # 1 Activates give full hp after killing zombie
-WEAPON = 1 # 1 Activates give deagle and m4a1 for weapon give after first infect
-FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
-HINT = 1 # 1 Tells hudhint hp
-Clan = '[Best RPG]' # Change it to your clan_tag you use for the extra features, currently it check [Best RPG] clan_tag
+WEAPON_RESTORE = 1 # Will clan member gain weapons back after getting removed
+
+KILL_HP = 1 # 1 Activates give full hp after killing zombie(Non clan tag members)
+HEALTH_BOOST = 10 # How much extra hp gain when have clan tag for killing
+MAX_HEALTH = 150 # How much health can have at max
+
+SPEED_BOOST = 0.10 # Current: 10% increase speed. How many percent increase speed for killing
+MAX_SPEED = 1.50 # How much player max speed can get after killing zombies
+
+ALLOW_FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
+ALLOW_HUDHINT = 1 # 1 Tells hudhint hp
+MAX_CREDITS = 15 # How much credits player can have at max
+CLAN_TAG = '[Best RPG]' # Change it to your clan_tag you use for the extra features, currently it check [Best RPG] clan_tag
+
+WEAPON = 1 # Enables/Disable players getting defined secondary and primary weapon after first infect
+TIMER_TO_INFECT = 15 # How long it takes first infect kick in
 weapon_secondary = 'deagle' # Which weapon give for pistols, note requires WEAPON = 1
 weapon_primary = 'm4a1' # Which weapon give for primary, note requires WEAPON = 1
 
@@ -108,6 +121,7 @@ class ZombiePlayer(Player):
 	def infect(self):
 		global HAS_INFECTED
 		HAS_INFECTED = True
+		index = self.index
 		self.switch_team(2)
 		self.set_noblock(True)
 		self.health = INFECT_HEALTH
@@ -127,7 +141,7 @@ class ZombiePlayer(Player):
 		if self.infect_type == 'First':
 			self.origin = self.spawn_origin
 			for player in PlayerIter('all'):
-				if player.index != self.index:
+				if player.index != index:
 					player.switch_team(3)
 					player.godmode = False
 
@@ -151,11 +165,11 @@ class ZombiePlayer(Player):
 			return
 
 		for weapons in self.weapons():
-			if weapons.classname.replace('weapon_', '', 1) == weapon:
+			if weapons.classname == f'weapon_{weapon}':
 				weapons.remove()
 				weapon_remove.send(index, weapons=weapon, default=default, cyan=cyan, green=green)
 
-		if Weapon_restore == 0:
+		if WEAPON_RESTORE == 0:
 			return
 
 		self.give_named_item(f'weapon_{weapon}')
@@ -184,18 +198,26 @@ class ZombiePlayer(Player):
 	def give_kill_bonus(self):
 		current_credits = self.have_credits
 		current_credits += 1
-		if current_credits >= 15:
-			current_credits = 15
-		self.have_credits += current_credits
+		if current_credits >= MAX_CREDITS:
+			current_credits = MAX_CREDITS
+		self.have_credits = current_credits
 		Kill.send(self.index, green=green, default=default, cred=current_credits)
 
-		if KILL_HP == 1:
+		if KILL_HP == 1 and self.is_wearing_clan_tag() == False:
 			self.health = 100
 
 		if self.is_wearing_clan_tag() == True:
-			self.max_health += Boost
-			self.health = self.max_health
-			self.speed = Speed
+			current_hp = self.health
+			current_hp += HEALTH_BOOST
+			if current_hp > MAX_HEALTH:
+				current_hp = MAX_HEALTH
+			self.health = current_hp
+
+			current_speed = self.speed
+			current_speed += SPEED_BOOST
+			if current_speed > MAX_SPEED:
+				current_speed = MAX_SPEED
+			self.speed = current_speed
 
 	def infinite_clip(self):
 		if self.is_bot():
@@ -204,7 +226,7 @@ class ZombiePlayer(Player):
 		if self.is_wearing_clan_tag() == False:
 			return
 
-		if Infitebullets == 0:
+		if INFITE_BULLETS == 0:
 			return
 
 		weapon = self.get_active_weapon()
@@ -216,7 +238,7 @@ class ZombiePlayer(Player):
 			weapon.clip += 1
 
 	def is_wearing_clan_tag(self):
-		if Clan == self.clan_tag:
+		if CLAN_TAG == self.clan_tag:
 			return True
 		else:
 			return False
@@ -243,7 +265,7 @@ def infopanel(attacker):
 #======================
 # Download/Load
 #======================
-DOWNLOADLIST_PATH    = path.Path(__file__).dirname().joinpath('css.txt')
+DOWNLOADLIST_PATH    = Path(__file__).dirname().joinpath('css.txt')
 
 def load():
 	queue_command_string('bot_quota 20')
@@ -313,10 +335,10 @@ def round_start(ev):
 	if userid:
 		player = ZombiePlayer(index_from_userid(userid))
 		player.infect_type = 'First'
-		player.delay(15, player.infect)
+		player.delay(TIMER_TO_INFECT, player.infect)
 		for others in player_list():
 			ct = ZombiePlayer.from_userid(others)
-			ct.delay(16, ct.give_weapons_ct)
+			ct.delay(TIMER_TO_INFECT + 1, ct.give_weapons_ct)
 
 @Event('player_spawn')
 def player_spawn(event):
@@ -345,13 +367,16 @@ def player_hurt(args):
 		victim = ZombiePlayer.from_userid(userid)
 		hurter = ZombiePlayer.from_userid(attacker)
 		if not victim.team == hurter.team:
-			if args.get_string('weapon') == 'hegrenade' and FIRE:
+			if args.get_string('weapon') == 'hegrenade' and ALLOW_FIRE:
 				victim.ignite_lifetime(10)
-			elif args.get_string('weapon') == 'knife' and args.get_int('dmg_health') >= 45:
+			elif args.get_string('weapon') == 'knife':
 				if not victim.team == 2:
-					victim.infect()
+					if args.get_int('dmg_health') >= 45 and INFECT_STAB_RIGHT:
+						victim.infect()
+					else:
+						victim.infect()
 			else:
-				if not hurter.is_bot() and HINT:
+				if not hurter.is_bot() and ALLOW_HUDHINT:
 					hurter.player_target = userid
 					hurter.delay(0.1, infopanel, (attacker,))
 
@@ -365,6 +390,8 @@ def player_death(args):
 		if not victim.team == player.team:
 			player.give_kill_bonus()
 	victim.uninfect()
+	for i in filter(lambda x: x.owner_handle in [-1, 0], WeaponIter()):
+		i.remove()
 
 @PreEvent('weapon_fire_on_empty')
 def pre_weapon_fire_on_empty(args):
