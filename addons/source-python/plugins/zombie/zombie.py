@@ -140,7 +140,7 @@ class ZombiePlayer(Player):
 		infect_message.send(name=self.name, default=default, green='\x04')
 		if self.infect_type == 'First':
 			self.origin = self.spawn_origin
-			for player in PlayerIter('all'):
+			for player in PlayerIter('alive'):
 				if player.index != index:
 					player.switch_team(3)
 					player.godmode = False
