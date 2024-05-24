@@ -513,30 +513,32 @@ def zprop_menus_select(_menu, _index, _option):
 def market_secondaries(menu, index):
 	menu.clear()
 	player = Player(index)
-	dead_status = player.dead
+	is_player_dead = player.dead
 	cash = player.cash
 	for secondary in WeaponClassIter(is_filters='pistol'):
 		cost = secondary.cost
-		afford = cash >= cost and not dead_status
+		afford = cash >= cost and not is_player_dead
 		menu.append(PagedOption(f'{secondary.basename.title()} [{secondary.cost}$]', secondary, afford, afford))
 
 def market_primaries(menu, index):
 	menu.clear()
 	player = Player(index)
-	dead_status = player.dead
+	is_player_dead = player.dead
 	cash = player.cash
 	for primaries in WeaponClassIter(is_filters='primary'):
 		cost = primaries.cost
-		afford = cash >= cost and not dead_status
+		afford = cash >= cost and not is_player_dead
 		menu.append(PagedOption(f'{primaries.basename.title()} [{cost}$]', primaries, afford, afford))
 
 def zprop_menus(menu, index):
 	menu.clear()
 	player = ZombiePlayer(index)
+	is_player_dead = player.dead
+	credits_amount = player.have_credits
 	for i in sorted(zprops):
 		price = int(zprops[i].split('-')[0])
 		name = zprops[i].split('-')[1]
-		afford = player.have_credits >= price and not player.dead
+		afford = credits_amount >= price and not is_player_dead
 		menu.append(PagedOption(f'{name} [Credits: {price}]', i, afford, afford))
 #==========================
 # Menus
