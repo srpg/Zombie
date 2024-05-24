@@ -451,8 +451,9 @@ def market_secondary_select(_menu, _index, _option):
 		if player.dead:
 			return weapon_purchase_alive.send(_index, weapon=weapon, green=green, cyan=cyan, default=default)
 
-		if player.cash >= price:
-			player.cash -= price
+		cash = player.cash
+		if cash >= price:
+			player.cash = cash - price
 
 			secondary = player.secondary
 			if secondary is not None:
@@ -462,7 +463,7 @@ def market_secondary_select(_menu, _index, _option):
 			weapon_tell.send(_index, weapon=weapon, price=price, green=green, cyan=cyan, default=default)
 
 		else:
-			weapon_afford.send(_index, weapon=weapon, missing=int(price - player.cash), green=green, cyan=cyan, default=default)
+			weapon_afford.send(_index, weapon=weapon, missing=int(price - cash), green=green, cyan=cyan, default=default)
 
 def market_primary_select(_menu, _index, _option):
 	choice = _option.value
@@ -474,8 +475,9 @@ def market_primary_select(_menu, _index, _option):
 		if player.dead:
 			return weapon_purchase_alive.send(_index, weapon=weapon, green=green, cyan=cyan, default=default)
 
-		if player.cash >= price:
-			player.cash -= price
+		cash = player.cash
+		if cash >= price:
+			player.cash = cash - price
 
 			primary = player.primary
 			if primary is not None:
@@ -485,7 +487,7 @@ def market_primary_select(_menu, _index, _option):
 			weapon_tell.send(_index, weapon=weapon, price=price, green=green, cyan=cyan, default=default)
 
 		else:
-			weapon_afford.send(_index, weapon=weapon, missing=int(price - player.cash), green=green, cyan=cyan, default=default)
+			weapon_afford.send(_index, weapon=weapon, missing=int(price - cash), green=green, cyan=cyan, default=default)
 
 def zprop_menus_select(_menu, _index, _option):
 	choice = _option.value
@@ -500,26 +502,33 @@ def zprop_menus_select(_menu, _index, _option):
 		price = int(zprops[choice].split('-')[0])
 		entity_name = zprops[choice].split('-')[1]
 		entity_model= zprops[choice].split('-')[2]
-		if player.have_credits >= price:
-			player.have_credits -= price
+		player_credits = player.have_credits
+		if player_credits >= price:
+			player.have_credits = player_credits - price
 			build_entity(player.userid, entity_model)
-			buy.send(_index, green=green,  default=default, price=price, cur=player.have_credits, type=entity_name)
+			buy.send(_index, green=green,  default=default, price=price, cur=player_credits, type=entity_name)
 #==========================
 # Menu build callbacks
 #==========================
 def market_secondaries(menu, index):
 	menu.clear()
 	player = Player(index)
+	dead_status = player.dead
+	cash = player.cash
 	for secondary in WeaponClassIter(is_filters='pistol'):
-		afford = player.cash >= secondary.cost and not player.dead
+		cost = secondary.cost
+		afford = cash >= cost and not dead_status
 		menu.append(PagedOption(f'{secondary.basename.title()} [{secondary.cost}$]', secondary, afford, afford))
 
 def market_primaries(menu, index):
 	menu.clear()
 	player = Player(index)
+	dead_status = player.dead
+	cash = player.cash
 	for primaries in WeaponClassIter(is_filters='primary'):
-		afford = player.cash >= primaries.cost and not player.dead
-		menu.append(PagedOption(f'{primaries.basename.title()} [{primaries.cost}$]', primaries, afford, afford))
+		cost = primaries.cost
+		afford = cash >= cost and not dead_status
+		menu.append(PagedOption(f'{primaries.basename.title()} [{cost}$]', primaries, afford, afford))
 
 def zprop_menus(menu, index):
 	menu.clear()
