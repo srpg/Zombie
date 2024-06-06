@@ -184,9 +184,11 @@ class ZombiePlayer(Player):
 	def purchase_weapon(self, weapon):
 		index = self.index
 		price = weapon_manager[weapon].cost
+		weapon_full_name = f'weapon_{weapon}'
+		weapon_name = weapon.title()
 
 		if self.dead:
-			return weapon_purchase_alive.send(index, weapon=weapon.title(), green=green, cyan=cyan, default=default)
+			return weapon_purchase_alive.send(index, weapon=weapon_name, green=green, cyan=cyan, default=default)
 
 		if self.team < 3:
 			return weapon_purchase_ct.send(index, green=green, default=default)
@@ -198,20 +200,20 @@ class ZombiePlayer(Player):
 		if cash >= price:
 			self.cash = cash - price
 
-			if f'weapon_{weapon}' in primaries:
+			if weapon_full_name in primaries:
 				if primary is not None:
 					primary.remove()
-				self.give_named_item(f'weapon_{weapon}')
+				self.give_named_item(weapon_full_name)
 
 			else:
 				if secondary is not None:
 					secondary.remove()
-				self.give_named_item(f'weapon_{weapon}')
+				self.give_named_item(weapon_full_name)
 
-			weapon_tell.send(index, weapon=weapon.title(), price=price, green=green, cyan=cyan, default=default)
+			weapon_tell.send(index, weapon=weapon_name, price=price, green=green, cyan=cyan, default=default)
 
 		else:
-			weapon_afford.send(index, weapon=weapon.title(), missing=int(price - cash), green=green, cyan=cyan, default=default)
+			weapon_afford.send(index, weapon=weapon_name, missing=int(price - cash), green=green, cyan=cyan, default=default)
 
 	def give_weapons_ct(self):
 		if self.team < 3:
