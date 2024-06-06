@@ -12,6 +12,7 @@ Commands:
  - !ztele for teleport to back spawn
  - !market to open market menu
  - !zprop to open zprop menu
+ - weapon name in chat to purchase, example: !deagle - purchase deagle (If have the clan tag that has set for the feature)
 
 Currently Available Features:
  - Hegrenade damage ignites zombie(Config able)
@@ -27,9 +28,11 @@ Currently Available Features:
  - Zprop(messages and price for using them)
  
 Currently Avaible Features Clan Tag:
- - When you kill zombie increases your health till reaches max limit that have been set for it(by default 150)
- - Gives back removed weapons(Config able)
- - When kill zombie it gives extra speed, till it reaches max limit that have been set for it(by default 150%)
+ - When you kill zombie increases your health till reaches max limit that have been set for it(by default 150), can disable/enable
+ - When kill zombie it gives extra speed, till it reaches max limit that have been set for it(by default 150%), can disable/enable
  - Infinite Bullets(Config able)
+ - Allows purchase weapons directly from chat
+ - Gives back removed weapons(Config able)
+
 
 Load command: sp plugin load zombie

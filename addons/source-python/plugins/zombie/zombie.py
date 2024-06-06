@@ -43,6 +43,8 @@ zombie_models = ['models/player/zh/zh_charple001.mdl','models/player/zh/zh_corps
 default = '\x01'
 cyan = '\x0700CED1'
 green='\x04'
+
+HintHpText = HintText('{name}: {hp}')
 #======================
 # Translated Messages
 #======================
@@ -84,19 +86,23 @@ WEAPON_REMOVE = 1 # Removes weapons which doesn't have bullets, 1 = On| 0 = Off
 WEAPON_RESTORE = 1 # Will clan member gain weapons back after getting removed
 
 KILL_HP = 1 # 1 Activates give full hp after killing zombie(Non clan tag members)
+
 HEALTH_BOOST = 10 # How much extra hp gain when have clan tag for killing
 MAX_HEALTH = 150 # How much health can have at max
-
 SPEED_BOOST = 0.10 # Current: 10% increase speed. How many percent increase speed for killing
 MAX_SPEED = 1.50 # How much player max speed can get after killing zombies
 
+KILL_HP_CLAN = 1 # Will clan tag members gain extra hp by killing zombies, 1 = On | 0 = Off
+KILL_SPEED_CLAN = 1 # Will clan tag members gain extra speed by killing zombies, 1 = On | 0 = Off
+
 ALLOW_FIRE = 1 # 1 Activates hegrenade hurt ignites enemies
 ALLOW_HUDHINT = 1 # 1 Tells hudhint hp
+
 MAX_CREDITS = 15 # How much credits player can have at max
 CLAN_TAG = '[Best RPG]' # Change it to your clan_tag you use for the extra features, currently it check [Best RPG] clan_tag
-
-WEAPON = 1 # Enables/Disable players getting defined secondary and primary weapon after first infect
 TIMER_TO_INFECT = 15 # How long it takes first infect kick in
+
+WEAPON = 0 # Enables/Disable players getting defined secondary and primary weapon after first infect
 weapon_secondary = 'deagle' # Which weapon give for pistols, note requires WEAPON = 1
 weapon_primary = 'm4a1' # Which weapon give for primary, note requires WEAPON = 1
 
@@ -247,17 +253,19 @@ class ZombiePlayer(Player):
 			self.health = 100
 
 		if self.is_wearing_clan_tag() == True:
-			current_hp = self.health
-			current_hp += HEALTH_BOOST
-			if current_hp > MAX_HEALTH:
-				current_hp = MAX_HEALTH
-			self.health = current_hp
+			if KILL_HP_CLAN:
+				current_hp = self.health
+				current_hp += HEALTH_BOOST
+				if current_hp > MAX_HEALTH:
+					current_hp = MAX_HEALTH
+				self.health = current_hp
 
-			current_speed = self.speed
-			current_speed += SPEED_BOOST
-			if current_speed > MAX_SPEED:
-				current_speed = MAX_SPEED
-			self.speed = current_speed
+			if KILL_SPEED_CLAN:
+				current_speed = self.speed
+				current_speed += SPEED_BOOST
+				if current_speed > MAX_SPEED:
+					current_speed = MAX_SPEED
+				self.speed = current_speed
 
 	def infinite_clip(self):
 		if self.is_bot():
@@ -297,8 +305,7 @@ def infopanel(attacker):
 		player.player_target = False
 
 	if not target.dead and target.health > 0:
-		__msg__ = f'{target.name}: {target.health}'
-		HintText(__msg__).send(player.index)
+		HintHpText.send(player.index, name=target.name, hp=target.health)
 	else:
 		player.player_target = False
 
