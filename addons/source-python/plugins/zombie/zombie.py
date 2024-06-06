@@ -25,10 +25,14 @@ from translations.strings import LangStrings
 # Menus
 from menus import SimpleMenu, SimpleOption
 from menus import Text, PagedMenu, PagedOption
+#	Weapons
+from weapons.manager import weapon_manager
 
 weapons = [weapon.basename for weapon in WeaponClassIter(not_filters='knife')]
 primaries = [weapon.name for weapon in WeaponClassIter(is_filters='primary')]
 secondaries = [weapon.name for weapon in WeaponClassIter(is_filters='pistol')]
+
+main_weapons = [weapon.basename for weapon in WeaponClassIter(is_filters='pistol')] + [weapon.basename for weapon in WeaponClassIter(is_filters='primary')]
 
 HAS_INFECTED = False
 
@@ -56,6 +60,7 @@ restore = SayText2(chat['Weapon_restore'])
 buy = SayText2(chat['Zprop_buy'])
 zprop_alive = SayText2(chat['Zprop Alive'])
 zprop_ct = SayText2(chat['Zprop CT'])
+clan_tag_required = SayText2(chat['Clan Tag Chat'])
 #======================
 # Market Messages
 #======================
@@ -66,6 +71,7 @@ market_alive =  SayText2(market_chat['Market_alive'])
 ztele =  SayText2(market_chat['Ztele'])
 ztele_alive = SayText2(market_chat['Ztele Alive'])
 weapon_tell = SayText2(market_chat['Weapon'])
+weapon_purchase_ct = SayText2(market_chat['CT Purchase'])
 #======================
 # Config
 #======================
@@ -174,6 +180,38 @@ class ZombiePlayer(Player):
 
 		self.give_named_item(f'weapon_{weapon}')
 		restore.send(index, weapons=weapon, clan=self.clan_tag, default=default, cyan=cyan, green=green)
+
+	def purchase_weapon(self, weapon):
+		index = self.index
+		price = weapon_manager[weapon].cost
+
+		if self.dead:
+			return weapon_purchase_alive.send(index, weapon=weapon.title(), green=green, cyan=cyan, default=default)
+
+		if self.team < 3:
+			return weapon_purchase_ct.send(index, green=green, default=default)
+
+		secondary = self.secondary
+		primary = self.primary
+
+		cash = self.cash
+		if cash >= price:
+			self.cash = cash - price
+
+			if f'weapon_{weapon}' in primaries:
+				if primary is not None:
+					primary.remove()
+				self.give_named_item(f'weapon_{weapon}')
+
+			else:
+				if secondary is not None:
+					secondary.remove()
+				self.give_named_item(f'weapon_{weapon}')
+
+			weapon_tell.send(index, weapon=weapon.title(), price=price, green=green, cyan=cyan, default=default)
+
+		else:
+			weapon_afford.send(index, weapon=weapon.title(), missing=int(price - cash), green=green, cyan=cyan, default=default)
 
 	def give_weapons_ct(self):
 		if self.team < 3:
@@ -421,6 +459,18 @@ def ztele_command(command, index, teamonly):
 	ZombiePlayer(index).ztele()
 	return False
 
+@SayCommand(['!' + weapon for weapon in main_weapons])
+@SayCommand(['/' + weapon for weapon in main_weapons])
+@SayCommand([weapon for weapon in main_weapons])
+def weapon_purchase_command(command, index, teamonly):
+	weapon = command[0].replace('!', '', 1).replace('/', '', 1)
+	player = ZombiePlayer(index)
+	if player.is_wearing_clan_tag():
+		player.purchase_weapon(weapon)
+	else:
+		clan_tag_required.send(index, green=green, cyan=cyan, default=default, clan=CLAN_TAG)
+	return False
+
 @SayCommand(['zprop', '/zprop', '!zprop'])
 def zrop_command(command, index, teamonly):
 	player = Player(index)
@@ -444,50 +494,12 @@ def main_menu_callback(_menu, _index, _option):
 def market_secondary_select(_menu, _index, _option):
 	choice = _option.value
 	if choice:
-		player = Player(_index)
-		price = choice.cost
-		weapon = choice.basename.title()
-
-		if player.dead:
-			return weapon_purchase_alive.send(_index, weapon=weapon, green=green, cyan=cyan, default=default)
-
-		cash = player.cash
-		if cash >= price:
-			player.cash = cash - price
-
-			secondary = player.secondary
-			if secondary is not None:
-				secondary.remove()
-
-			player.give_named_item(choice.name)
-			weapon_tell.send(_index, weapon=weapon, price=price, green=green, cyan=cyan, default=default)
-
-		else:
-			weapon_afford.send(_index, weapon=weapon, missing=int(price - cash), green=green, cyan=cyan, default=default)
+		return ZombiePlayer(_index).purchase_weapon(choice)
 
 def market_primary_select(_menu, _index, _option):
 	choice = _option.value
 	if choice:
-		player = Player(_index)
-		price = choice.cost
-		weapon = choice.basename.title()
-
-		if player.dead:
-			return weapon_purchase_alive.send(_index, weapon=weapon, green=green, cyan=cyan, default=default)
-
-		cash = player.cash
-		if cash >= price:
-			player.cash = cash - price
-
-			primary = player.primary
-			if primary is not None:
-				primary.remove()
-
-			player.give_named_item(choice.name)
-			weapon_tell.send(_index, weapon=weapon, price=price, green=green, cyan=cyan, default=default)
-
-		else:
-			weapon_afford.send(_index, weapon=weapon, missing=int(price - cash), green=green, cyan=cyan, default=default)
+		return ZombiePlayer(_index).purchase_weapon(choice)
 
 def zprop_menus_select(_menu, _index, _option):
 	choice = _option.value
@@ -515,20 +527,20 @@ def market_secondaries(menu, index):
 	player = Player(index)
 	is_player_dead = player.dead
 	cash = player.cash
-	for secondary in WeaponClassIter(is_filters='pistol'):
-		cost = secondary.cost
+	for secondary in secondaries:
+		cost = weapon_manager[secondary].cost
 		afford = cash >= cost and not is_player_dead
-		menu.append(PagedOption(f'{secondary.basename.title()} [{secondary.cost}$]', secondary, afford, afford))
+		menu.append(PagedOption(f'{secondary.split("_")[1].title()} [{cost}$]', secondary.split("_")[1], afford, afford))
 
 def market_primaries(menu, index):
 	menu.clear()
 	player = Player(index)
 	is_player_dead = player.dead
 	cash = player.cash
-	for primaries in WeaponClassIter(is_filters='primary'):
-		cost = primaries.cost
+	for primary in primaries:
+		cost = weapon_manager[primary].cost
 		afford = cash >= cost and not is_player_dead
-		menu.append(PagedOption(f'{primaries.basename.title()} [{cost}$]', primaries, afford, afford))
+		menu.append(PagedOption(f'{primary.split("_")[1].title()} [{cost}$]', primary.split("_")[1], afford, afford))
 
 def zprop_menus(menu, index):
 	menu.clear()
