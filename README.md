@@ -12,7 +12,7 @@ Commands:
  - !ztele for teleport to back spawn
  - !market to open market menu
  - !zprop to open zprop menu
- - weapon name in chat to purchase, example: !deagle - purchase deagle (If have the clan tag that has set for the feature)
+ - weapon name in chat to purchase, example: !deagle - purchase deagle (If player is wearing clan tag have set)
 
 Currently Available Features:
  - Hegrenade damage ignites zombie(Config able)
