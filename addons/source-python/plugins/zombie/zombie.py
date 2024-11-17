@@ -527,7 +527,7 @@ def zprop_menus_select(_menu, _index, _option):
 		if player_credits >= price:
 			player.have_credits = player_credits - price
 			build_entity(player.userid, entity_model)
-			buy.send(_index, green=green,  default=default, price=price, cur=player_credits, type=entity_name)
+			buy.send(_index, green=green,  default=default, price=price, cur=player.have_credits, type=entity_name)
 #==========================
 # Menu build callbacks
 #==========================
