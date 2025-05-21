@@ -38,7 +38,7 @@ HAS_INFECTED = False
 
 zprops = {1: '2-Filing Cabinet-models/props/cs_office/file_cabinet1.mdl', 2: '3-Barrel-models/props/de_train/Barrel.mdl', 3: '4-Dryer-models/props/cs_militia/dryer.mdl', 4: '5-Wooden Crate-models/props_junk/wood_crate001a.mdl', 5: '7-Gas Pump-models/props_wasteland/gaspump001a.mdl', 6: '15-Dumpster-models/props_junk/TrashDumpster01a.mdl'}
 close = 0
-zombie_models = ['models/player/zh/zh_charple001.mdl','models/player/zh/zh_corpse002.mdl','models/player/zh/zh_zombie003.mdl','models/player/ics/hellknight_red/t_guerilla.mdl']
+zombie_models = []
 
 default = '\x01'
 cyan = '\x0700CED1'
@@ -324,9 +324,9 @@ def load():
 	queue_command_string('mp_autoteambalance 0')
 	queue_command_string('bot_chatter off') # Mute bots radio
 	queue_command_string('mp_humanteam any')
-	setDl()
+	set_download_models()
 
-def setDl():
+def set_download_models():
 	downloadables = Downloadables()
 	with open(DOWNLOADLIST_PATH) as f:
 		for line in f:
@@ -335,6 +335,8 @@ def setDl():
 				continue
 			downloadables.add(line)
 
+			if line.endswith('.mdl'):
+				zombie_models.append(line)
 #========================
 # Functions
 #========================
