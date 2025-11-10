@@ -4,7 +4,7 @@ This plugin infects a random player to zombie.
 
 In order to infect players, you need have to stab knife, over 45damage(can be disabled via config).
 
-This plugin requires <a href="https://forums.sourcepython.com/">Source.Python</a> to load.
+This plugin requires <a href="https://forums.sourcepython.com/(https://github.com/Source-Python-Dev-Team/Source.Python)">Source.Python</a> to load.
 
 If have feature request(s) or discover a bug open then <a href="https://github.com/srpg/Zombie/issues">issue</a> and i will take look if it is possible to implement(for request(s))
 
